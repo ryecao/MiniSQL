@@ -38,8 +38,7 @@ private:
   SqlCommand SqlQuit(std::string& command);
   SqlCommand SqlSelectFrom(std::string& command);
 private:
-  set<string> sql_command_first_word;
-  set<string> sql_command_second_word;
+  set<std::string> sql_command;
 };
 
 #endif

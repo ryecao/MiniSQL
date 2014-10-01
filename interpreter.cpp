@@ -14,6 +14,7 @@
 // please compile with -std=c++11
 
 #include "interpreter.h"
+#include "sql_command.h"
 #include <string>
 #include <set>
 #include <algorithm>
@@ -21,8 +22,8 @@
 //@author: ryecao
 //@brief: 构造函数
 Interpreter::Interpreter(){
-  sql_command_first_word = {"create","drop","select","insert","delete","quit","execfile"};
-  sql_command_second_word = {"table","index","from","into"};
+  sql_command = {"create table","create index","delete from","drop table","drop index","execfile",
+                 "insert into","quit","select"};
 }
 
 //@author: ryecao
@@ -41,28 +42,65 @@ std::string Interpreter::LowerCase(std::string& raw_string){
 bool Interpreter::ReadInput(){
   std::string first_word;
   std::string second_word;
-  std::string command("");
+  std::string command_type("");
+  std::string command_content("");
 
   std::cin >> first_word;
   LowerCase(first_word);
-  command = first_word;
-  const bool is_in_sql_command_first_word = sql_command_first_word.find(first_word) != sql_command_first_word.end()
-  if(is_in_sql_command_first_word == 0){
-    return 0;
-  }
-  else{
-  	
+
+  command_type = first_word;
+  
+  if(first_word != "select"){
+    std::cin >> second_word;
+    LowerCase(second_word);
+
+    command_type = first_word + " " +second_word;
+    const bool is_in_sql_command = sql_command.find(command_type) != sql_command.end();
+
+    if (is_in_sql_command == 0){
+      return false;
+    }
   }
 
-  std::cin >> second_word;
-  LowerCase(second_word);
-  comand = first_word + " " +second_word
-  const bool is_in_sql_command_second_word = sql_command_second_word.find(second_word) != sql_command_second_word.end()
-  if (is_in_sql_command_second_word == 0){
-    return 0;
-  }
-  else{
+  bool flag_read_not_finish = true;
+  std::string temp_word;
 
+  while(flag_read_not_finish){
+    std::cin >> temp_word;
+    if (temp_word.back() ==';'){
+      flag_read_not_finish = false;
+    }
+    command_content = command_content + " " +temp_word;
   }
-  return command;
+
+  return true;
+}
+
+SqlCommand Interpreter::SqlCreateTable(std::string& command){
+  
+}
+
+SqlCommand Interpreter::SqlCreateIndex(std::string& command){
+
+}
+SqlCommand Interpreter::SqlDeleteFrom(std::string& command){
+
+}
+SqlCommand Interpreter::SqlDropTable(std::string& command){
+
+}
+SqlCommand Interpreter::SqlDropIndex(std::string& command){
+
+}
+SqlCommand Interpreter::SqlExecfile(std::string& command){
+
+}
+SqlCommand Interpreter::SqlInsertInto(std::string& command){
+
+}
+SqlCommand Interpreter::SqlQuit(std::string& command){
+
+}
+SqlCommand Interpreter::SqlSelectFrom(std::string& command){
+
 }
