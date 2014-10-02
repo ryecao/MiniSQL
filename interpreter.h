@@ -28,15 +28,17 @@ public:
   bool ReadInput();
 private:
   std::string LowerCase();
-  SqlCommand SqlCreateTable(std::string& command);
-  SqlCommand SqlCreateIndex(std::string& command);
-  SqlCommand SqlDeleteFrom(std::string& command);
-  SqlCommand SqlDropTable(std::string& command);
-  SqlCommand SqlDropIndex(std::string& command);
-  SqlCommand SqlExecfile(std::string& command);
-  SqlCommand SqlInsertInto(std::string& command);
-  SqlCommand SqlQuit(std::string& command);
-  SqlCommand SqlSelectFrom(std::string& command);
+  std::string CommandContentPreProcess(std::string&);
+  void ReplacePartInString(std::string&, const std::string&, const std::string&);
+  SqlCommand SqlCreateTable(std::string&);
+  SqlCommand SqlCreateIndex(std::string&);
+  SqlCommand SqlDeleteFrom(std::string&);
+  SqlCommand SqlDropTable(std::string&);
+  SqlCommand SqlDropIndex(std::string&);
+  SqlCommand SqlExecfile(std::string&);
+  SqlCommand SqlInsertInto(std::string&);
+  SqlCommand SqlQuit(std::string&);
+  SqlCommand SqlSelectFrom(std::string&);
 private:
   set<std::string> sql_command;
 };

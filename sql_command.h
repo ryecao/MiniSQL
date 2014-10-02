@@ -32,6 +32,7 @@ enum SqlCommandType
   kSqlInsertInto,
   kSqlQuit,
   kSqlSelectFrom,
+  kSqlInvalid,
 };
 
 //@author: ryecao
@@ -49,8 +50,9 @@ class SqlCommand
 {
 public:
   void set_command_type(SqlCommandType command_type) { command_type_ = command_type; };
-  virtual void set_database_name(std::string database_name) { database_name_ = database_name; };
+  void set_database_name(std::string& database_name) { database_name_ = database_name; };
   SqlCommandType command_type() const { return command_type_; };
+  std::string database_name() const {return database_name_; };
 protected:
   SqlCommandType command_type_;
   std::string database_name_;
@@ -63,15 +65,21 @@ class SqlCommandCreateTable : public SqlCommand
 public:
   SqlCommandCreateTable();
   ~SqlCommandCreateTable();
+  void set_table_name(std::string& table_name) { table_name_ = table_name; };
+  void set_primary_key(std::string& key_name) { primary_key_.push_back(key_name); };
+  void set_unique(std::string& key_name) { unique_.push_back(key_name); };
+  std::string table_name() const { return  table_name_; };
+  std::vector<std::string> primary_key() const { return  primary_key_; };
+  std::vector<std::string> unique() const { return unique_; };
+  std::map<std::string, std::pair<std::string,int> > attribute() const { return attribute_; };
 private:
-  std::string database_name_;
   std::string table_name_;
-  //primary key marked as true
-  std::map<std::string, bool> primary_key_;
-  //unique attribute as unique
-  std::map<std::string, bool> unique_;
+  //primary keys
+  std::vector<std::string> primary_key_;
+  //unique keys
+  std::vector<std::string> unique_;
   //<列名，<类型,长度>>
-  std::map<std::string, std::map<std::string,int> > attribute_;
+  std::map<std::string, std::pair<std::string,int> > attribute_;
 };
 
 //@author: ryecao
@@ -81,10 +89,16 @@ class SqlCommandCreateIndex : public SqlCommand
 public:
   SqlCommandCreateIndex();
   ~SqlCommandCreateIndex();
+  void set_index_name(std::string& index_name){ index_name_ = index_name; };
+  void set_table_name(std::string& table_name){ table_name_ = table_name; };
+  void set_column_name(std::string& column_name){ column_name_ = column_name; };
+  std::string index_name() const { return index_name_; };
+  std::string table_name() const { return table_name_; };
+  std::string column_name() const { return column_name_; };
 private:
   std::string index_name_;
   std::string table_name_;
-  std::string coloum_name_;
+  std::string column_name_;
 };
 
 //@author: ryecao
@@ -94,6 +108,10 @@ class SqlCommandDeleteFrom : public SqlCommand
 public:
   SqlCommandDeleteFrom();
   ~SqlCommandDeleteFrom();
+  void set_table_name(std::string& table_name) { table_name_ = table_name; };
+  void set_where_clause(WhereClause where_clause) { where_clause_.push_back(where_clause); };
+  std::string table_name() const { return table_name_; };
+  std::vector<WhereClause> where_clause() const { return where_clause_; };
 private:
   std::string table_name_;
   std::vector<WhereClause> where_clause_;
@@ -106,6 +124,8 @@ class SqlCommandDropTable : public SqlCommand
 public:
   SqlCommandDropTable();
   ~SqlCommandDropTable();
+  void set_table_name(std::string& table_name) { table_name_ = table_name; };
+  std::string table_name() const { return table_name_; };
 private:
   std::string table_name_;
 };
@@ -117,6 +137,8 @@ class SqlCommandDropIndex : public SqlCommand
 public:
   SqlCommandDropIndex();
   ~SqlCommandDropIndex();
+  void set_index_name(std::string& index_name) { index_name_ = index_name; };
+  std::string index_name() const { return index_name_; };
 private:
   std::string index_name_;
   
@@ -129,8 +151,14 @@ class SqlCommandSelectFrom : public SqlCommand
 public:
   SqlCommandSelectFrom();
   ~SqlCommandSelectFrom();
+  void set_column_name(std::string& column_name){ column_name_ = column_name; };
+  void set_table_name(std::string& table_name){ table_name_ = table_name; };
+  void set_where_clause(WhereClause where_clause){ where_clause_.push_back(where_clause); };
+  std::string column_name() const { return column_name_; };
+  std::string table_name() const { return table_name_; };
+  std::vector<WhereClause> where_clause() const { return where_clause_; };
 public:
-  std::string coloum_name_;
+  std::string column_name_;
   std::string table_name_;
   std::vector<WhereClause> where_clause_;
 };
