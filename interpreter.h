@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include <set>
+#include <string>
 #include "sql_command.h"
 
 //@author: ryecao
@@ -27,20 +28,22 @@ public:
   ~Interpreter();
   bool ReadInput();
 private:
-  std::string LowerCase();
+  void SelectSqlCommand(std::string&, std::string&);
+  bool ReadInput(std::stringstream&);
+  std::string LowerCase(std::string&);
   std::string CommandContentPreProcess(std::string&);
-  void ReplacePartInString(std::string&, const std::string&, const std::string&);
+  std::string  ReplacePartInString(std::string&, const std::string&, const std::string&);
   SqlCommand SqlCreateTable(std::string&);
   SqlCommand SqlCreateIndex(std::string&);
   SqlCommand SqlDeleteFrom(std::string&);
   SqlCommand SqlDropTable(std::string&);
   SqlCommand SqlDropIndex(std::string&);
-  SqlCommand SqlExecfile(std::string&);
   SqlCommand SqlInsertInto(std::string&);
-  SqlCommand SqlQuit(std::string&);
   SqlCommand SqlSelectFrom(std::string&);
+  void SqlExecfile(std::string&);
+  void SqlQuit(std::string&);
 private:
-  set<std::string> sql_command;
+  std::set<std::string> sql_command;
 };
 
 #endif

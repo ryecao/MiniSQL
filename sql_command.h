@@ -63,8 +63,6 @@ protected:
 class SqlCommandCreateTable : public SqlCommand
 {
 public:
-  SqlCommandCreateTable();
-  ~SqlCommandCreateTable();
   void set_table_name(std::string& table_name) { table_name_ = table_name; };
   void set_primary_key(std::string& key_name) { primary_key_.push_back(key_name); };
   void set_unique(std::string& key_name) { unique_.push_back(key_name); };
@@ -87,8 +85,6 @@ private:
 class SqlCommandCreateIndex : public SqlCommand
 {
 public:
-  SqlCommandCreateIndex();
-  ~SqlCommandCreateIndex();
   void set_index_name(std::string& index_name){ index_name_ = index_name; };
   void set_table_name(std::string& table_name){ table_name_ = table_name; };
   void set_column_name(std::string& column_name){ column_name_ = column_name; };
@@ -106,8 +102,6 @@ private:
 class SqlCommandDeleteFrom : public SqlCommand
 {
 public:
-  SqlCommandDeleteFrom();
-  ~SqlCommandDeleteFrom();
   void set_table_name(std::string& table_name) { table_name_ = table_name; };
   void set_where_clause(WhereClause where_clause) { where_clause_.push_back(where_clause); };
   std::string table_name() const { return table_name_; };
@@ -122,8 +116,6 @@ private:
 class SqlCommandDropTable : public SqlCommand
 {
 public:
-  SqlCommandDropTable();
-  ~SqlCommandDropTable();
   void set_table_name(std::string& table_name) { table_name_ = table_name; };
   std::string table_name() const { return table_name_; };
 private:
@@ -135,8 +127,6 @@ private:
 class SqlCommandDropIndex : public SqlCommand
 {
 public:
-  SqlCommandDropIndex();
-  ~SqlCommandDropIndex();
   void set_index_name(std::string& index_name) { index_name_ = index_name; };
   std::string index_name() const { return index_name_; };
 private:
@@ -149,8 +139,6 @@ private:
 class SqlCommandSelectFrom : public SqlCommand
 {
 public:
-  SqlCommandSelectFrom();
-  ~SqlCommandSelectFrom();
   void set_column_name(std::string& column_name){ column_name_ = column_name; };
   void set_table_name(std::string& table_name){ table_name_ = table_name; };
   void set_where_clause(WhereClause where_clause){ where_clause_.push_back(where_clause); };

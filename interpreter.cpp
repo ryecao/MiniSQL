@@ -19,6 +19,9 @@
 #include <set>
 #include <algorithm>
 #include <sstream>
+#include <fstream>
+#include <iostream>
+
 //@author: ryecao
 //@brief: 构造函数
 Interpreter::Interpreter(){
@@ -80,6 +83,29 @@ std::string Interpreter::CommandContentPreProcess(std::string& command_content){
 }
 
 //@author: ryecao
+//@brief: 根据 command_type 选择相应的语句生成器
+void Interpreter::SelectSqlCommand(std::string& command_type, std::string& command_content){
+  if (command_type == "create table")
+      SqlCreateTable(command_content);
+    else if (command_type == "create index")
+      SqlCreateIndex(command_content);
+    else if (command_type == "delete from")
+      SqlDeleteFrom(command_content);
+    else if (command_type == "drop table")
+      SqlDropTable(command_content);
+    else if (command_type == "drop index")
+      SqlDropIndex(command_content);
+    else if (command_type == "execfile")
+      SqlExecfile(command_content);
+    else if (command_type == "insert into")
+      SqlInsertInto(command_content);
+    else if (command_type == "quit" || command_type == "quit;")
+      SqlQuit(command_content);
+    else if (command_type == "select")
+      SqlSelectFrom(command_content); 
+}
+
+//@author: ryecao
 //@breif: 读入
 //@return: 命令名是否合法
 bool Interpreter::ReadInput(){
@@ -123,28 +149,59 @@ bool Interpreter::ReadInput(){
       }
       command_content = command_content + " " +temp_word;
     }
-    if (command_type == "create table")
-      SqlCreateTable(command_content);
-    else if (command_type == "create index")
-      SqlCreateIndex(command_content);
-    else if (command_type == "delete from")
-      SqlDeleteFrom(command_content);
-    else if (command_type == "drop table")
-      SqlDropTable(command_content);
-    else if (command_type == "drop index")
-      SqlDropIndex(command_content);
-    else if (command_type == "execfile")
-      SqlExecfile(command_content);
-    else if (command_type == "insert into")
-      SqlInsertInto(command_content);
-    else if (command_type == "quit" || command_type == "quit;")
-      SqlQuit(command_content);
-    else if (command_type == "select")
-      SqlSelectFrom(command_content);
+    SelectSqlCommand(command_type, command_content);
   }
 
   return is_command_type_valid;
 }
+
+bool Interpreter::ReadInput(std::stringstream& read_command_stream){
+  std::string first_word;
+  std::string second_word;
+  std::string command_type("");
+  std::string command_content("");
+  bool is_command_type_valid;
+
+  read_command_stream >> first_word;
+  LowerCase(first_word);
+
+  command_type = first_word;
+  
+  if(first_word != "select" || first_word != "quit" || first_word != "quit;" || first_word != "execfile" ){
+    read_command_stream >> second_word;
+    LowerCase(second_word);
+
+    command_type = first_word + " " +second_word;
+    const bool is_in_sql_command = sql_command.find(command_type) != sql_command.end();
+
+    if (is_in_sql_command == 0){
+      is_command_type_valid = false;
+      return is_command_type_valid;
+    }
+  }
+  else if (first_word == "select" || first_word == "quit" || first_word == "quit;" || first_word == "execfile")
+  {
+    is_command_type_valid = true;
+  }
+
+  if (is_command_type_valid)
+  {
+    bool flag_read_not_finish = true;
+    std::string temp_word;
+
+    while(flag_read_not_finish){
+      read_command_stream >> temp_word;
+      if (temp_word.back() ==';'){
+        flag_read_not_finish = false;
+      }
+      command_content = command_content + " " +temp_word;
+    }
+    SelectSqlCommand(command_type, command_content);
+  }
+
+  return is_command_type_valid;
+}
+
 
 //@author: ryecao
 //@brief: 检查 create table 语句合法性，创建相应语句对象
@@ -160,10 +217,8 @@ SqlCommand Interpreter::SqlCreateTable(std::string& command){
   create_table_command.set_table_name(word);
   
   command_stream >> word; // 第二个应是一个 "("
-  if (word!="("){
+  if (word!="(")
     create_table_command.set_command_type(kSqlInvalid);
-    return;
-  }
   else{
     while(word!=";"){
 
@@ -174,7 +229,7 @@ SqlCommand Interpreter::SqlCreateTable(std::string& command){
 //@author: ryecao
 //@brief: 检查 create index 语句合法性，创建相应语句对象
 SqlCommand Interpreter::SqlCreateIndex(std::string& command){
-  SqlCommandCreatIndex create_index_command;
+  SqlCommandCreateIndex create_index_command;
   create_index_command.set_command_type(kSqlCreateIndex);
   CommandContentPreProcess(command);
   std::stringstream command_stream(command);
@@ -218,14 +273,14 @@ SqlCommand Interpreter::SqlDeleteFrom(std::string& command){
   std::stringstream command_stream(command);
   std::string word;
 
-  command >> word;
+  command_stream >> word;
   delete_from_command.set_table_name(word);
 
-  command >> word;
+  command_stream >> word;
   if(word != ";")
-    create_index_command.set_command_type(kSqlInvalid);
+    delete_from_command.set_command_type(kSqlInvalid);
 
-  return SqlCommand;  
+  return delete_from_command;  
 }
 
 //@author: ryecao
@@ -237,14 +292,14 @@ SqlCommand Interpreter::SqlDropTable(std::string& command){
   std::stringstream command_stream(command);
   std::string word;
 
-  command >> word;
+  command_stream >> word;
   drop_table_command.set_table_name(word);
 
-  command >> word;
+  command_stream >> word;
   if(word != ";")
     drop_table_command.set_command_type(kSqlInvalid);
 
-  return SqlCommand;
+  return drop_table_command;
 }
 
 //@author: ryecao
@@ -256,25 +311,52 @@ SqlCommand Interpreter::SqlDropIndex(std::string& command){
   std::stringstream command_stream(command);
   std::string word;
 
-  command >> word;
+  command_stream >> word;
   drop_index_command.set_index_name(word);
 
-  command >> word;
+  command_stream >> word;
   if(word != ";")
     drop_index_command.set_command_type(kSqlInvalid);
 
-  return SqlCommand;
+  return drop_index_command;
 }
 
-SqlCommand Interpreter::SqlExecfile(std::string& command){
+//@author: ryecao
+//@brief: 检查 execfile 语句合法性.  
+void Interpreter::SqlExecfile(std::string& command){
+  CommandContentPreProcess(command);
+  std::stringstream command_stream(command);
+  std::string filename;
+  char read_buffer[256];
+  command_stream >> filename;
 
+  std::ifstream file(filename);
+  if (!file.is_open()){
+    std::cout<<"File could not be opened. Please check your input."<<std::endl;
+  }
+  else{
+    while(!file.eof()){
+      file.getline(read_buffer,256);
+      std::stringstream read_command_stream(read_buffer);
+      ReadInput(read_command_stream);      
+    }
+  }
 }
+
+//@author: ryecao
+//@brief: 检查 insert into 语句合法性，创建相应语句对象
 SqlCommand Interpreter::SqlInsertInto(std::string& command){
 
 }
-SqlCommand Interpreter::SqlQuit(std::string& command){
 
+//@author: ryecao
+//@brief: quiet 语句，终止程序
+void Interpreter::SqlQuit(std::string& command){
+  std::exit(1);
 }
+
+//@author: ryecao
+//@brief: 检查 insert into 语句合法性，创建相应语句对象
 SqlCommand Interpreter::SqlSelectFrom(std::string& command){
 
 }
