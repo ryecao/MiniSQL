@@ -22,7 +22,7 @@
 //@author: ryecao
 //@brief: Interpreter 类
 class Interpreter
-{
+{   
 public:
   Interpreter();
   ~Interpreter();

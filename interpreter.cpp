@@ -64,6 +64,7 @@ std::string Interpreter::ReplacePartInString(std::string& str, const std::string
 //@params: command_content：处理之前的命令内容
 //@reutrn: command_content：处理之后的命令内容
 std::string Interpreter::CommandContentPreProcess(std::string& command_content){
+  ReplacePartInString(command_content, "*"," * ");
   ReplacePartInString(command_content, "("," ( ");
   ReplacePartInString(command_content, ")"," ) ");
   ReplacePartInString(command_content, ";"," ; ");
@@ -217,13 +218,86 @@ SqlCommand Interpreter::SqlCreateTable(std::string& command){
   create_table_command.set_table_name(word);
   
   command_stream >> word; // 第二个应是一个 "("
-  if (word!="(")
+  if (word!="("){
     create_table_command.set_command_type(kSqlInvalid);
-  else{
-    while(word!=";"){
+    return create_table_command;
+  }
+
+  std::string column_name,type,char_length;
+  std::string first_word, second_word;
+  while(word!=";"){
+    command_stream >> first_word;
+    command_stream >> second_word;
+    if (first_word !="primary" && second_word!="key"){
+      column_name = first_word;
+      type = second_word;
+
+      if (type != "char"){
+        create_table_command.set_attribute(column_name,type,"1");
+      }
+      else{
+        command_stream >> word;
+        if (word !="("){
+          create_table_command.set_command_type(kSqlInvalid);
+          return create_table_command;
+        }
+        command_stream >> char_length;
+
+        command_stream >> word;
+        if (word !=")"){
+          create_table_command.set_command_type(kSqlInvalid);
+          return create_table_command;
+        }
+        create_table_command.set_attribute(column_name,type,char_length);
+      }
+
+      command_stream >> word;
+      if (word ==")"){
+        break;
+      }
+      else if (word != ",")
+      {
+        if (LowerCase(word)=="unique")
+        {
+          create_table_command.set_unique(column_name);
+        }
+        else{
+          create_table_command.set_command_type(kSqlInvalid);
+          return create_table_command;
+        }
+      }
+    }
+    else{
+      command_stream >> word;
+      if (word !="("){
+        create_table_command.set_command_type(kSqlInvalid);
+        return create_table_command;
+      }
+
+      command_stream >> word;
+      create_table_command.set_primary_key(word);
+
+      command_stream >> word;
+      if (word !=")"){
+        create_table_command.set_command_type(kSqlInvalid);
+        return create_table_command;
+      }
+
+      command_stream >> word;
+      if (word ==")"){
+        break;
+      }
+      else if (word != ",")
+      {
+        create_table_command.set_command_type(kSqlInvalid);
+        return create_table_command;
+      }
 
     }
-  }  
+    command_stream >> word;
+  }
+
+  return create_table_command; 
 }
 
 //@author: ryecao
@@ -241,31 +315,37 @@ SqlCommand Interpreter::SqlCreateIndex(std::string& command){
   command_stream >> word;
   if(LowerCase(word) != "on")
     create_index_command.set_command_type(kSqlInvalid);
+  return create_index_command;
 
   command_stream >> word;
   create_index_command.set_table_name(word);
 
   command_stream >> word;
-  if (word != "(")
+  if (word != "("){
     create_index_command.set_command_type(kSqlInvalid);
+    return create_index_command;
+  }
 
   command_stream >> word;
   create_index_command.set_column_name(word);
 
   command_stream >> word;
-  if (word != ")")
+  if (word != ")"){
     create_index_command.set_command_type(kSqlInvalid);
+    return create_index_command;
+  }
 
   command_stream >> word;
-  if (word != ";")
+  if (word != ";"){
     create_index_command.set_command_type(kSqlInvalid);
+    return create_index_command;
+  }
 
   return create_index_command;
 }
 
 //@author: ryecao
 //@brief: 检查 delete from 语句合法性，创建相应语句对象
-//TODO: where clause
 SqlCommand Interpreter::SqlDeleteFrom(std::string& command){
   SqlCommandDeleteFrom delete_from_command;
   delete_from_command.set_command_type(kSqlDeleteFrom);
@@ -276,9 +356,58 @@ SqlCommand Interpreter::SqlDeleteFrom(std::string& command){
   command_stream >> word;
   delete_from_command.set_table_name(word);
 
+
   command_stream >> word;
-  if(word != ";")
-    delete_from_command.set_command_type(kSqlInvalid);
+  if (word ==";"){
+    delete_from_command.set_delete_all_records(true);
+    return delete_from_command;
+  }
+  else{
+    std::set<std::string> WhereClauseOperators = {"<","<=","=",">=",">","!="};
+    WhereClause clause;
+
+    command_stream >> word;
+    while(word!=";"){
+      clause.kColumnName = word;
+
+      command_stream >> word;
+      if (WhereClauseOperators.find(word) != WhereClauseOperators.end()){
+        clause.kOperator = word;
+      }
+      else{
+        delete_from_command.set_command_type(kSqlInvalid);
+        return delete_from_command;
+      }
+
+      command_stream >> word;
+      if (word != "'"){
+        delete_from_command.set_command_type(kSqlInvalid);
+        return delete_from_command;
+      }
+
+      command_stream >> word;
+      clause.kCondition = word;
+
+      if (word != "'"){
+        delete_from_command.set_command_type(kSqlInvalid);
+        return delete_from_command;
+      }
+
+      delete_from_command.set_where_clause(clause);
+
+      command_stream >> word;
+
+      if (word ==";"){
+        break;
+      }
+      else if (LowerCase(word) != "and"){
+        delete_from_command.set_command_type(kSqlInvalid);
+        return delete_from_command;
+      }
+
+      command_stream >> word;
+    }
+  }
 
   return delete_from_command;  
 }
@@ -296,8 +425,10 @@ SqlCommand Interpreter::SqlDropTable(std::string& command){
   drop_table_command.set_table_name(word);
 
   command_stream >> word;
-  if(word != ";")
+  if(word != ";"){
     drop_table_command.set_command_type(kSqlInvalid);
+    return drop_table_command;
+  }
 
   return drop_table_command;
 }
@@ -315,8 +446,10 @@ SqlCommand Interpreter::SqlDropIndex(std::string& command){
   drop_index_command.set_index_name(word);
 
   command_stream >> word;
-  if(word != ";")
+  if(word != ";"){
     drop_index_command.set_command_type(kSqlInvalid);
+    return drop_index_command;
+  }
 
   return drop_index_command;
 }
@@ -346,7 +479,66 @@ void Interpreter::SqlExecfile(std::string& command){
 //@author: ryecao
 //@brief: 检查 insert into 语句合法性，创建相应语句对象
 SqlCommand Interpreter::SqlInsertInto(std::string& command){
+  SqlCommandInsertInto insert_into_command;
+  insert_into_command.set_command_type(kSqlInsertInto);
+  CommandContentPreProcess(command);
+  std::stringstream command_stream(command);
+  std::string word;
 
+  command_stream >> word;
+  insert_into_command.set_table_name(word);
+  
+  command_stream >> word;
+  if (LowerCase(word) != "values"){
+    insert_into_command.set_command_type(kSqlInvalid);
+    return insert_into_command;
+  }
+
+  command_stream >> word;
+  if (word != "("){
+    insert_into_command.set_command_type(kSqlInvalid);
+    return insert_into_command;
+  }
+
+  command_stream >> word;
+
+  std::vector<std::string> insert_values;
+
+  while(word != ")"){
+    if (word != "'"){
+      insert_into_command.set_command_type(kSqlInvalid);
+      return insert_into_command;
+    }
+    
+    command_stream >> word;
+    insert_values.push_back(word);
+
+    command_stream >> word;
+    if (word !="'"){
+      insert_into_command.set_command_type(kSqlInvalid);
+      return insert_into_command;
+    }
+    
+    command_stream >> word;
+    if (word == ")"){
+      break;
+    }
+    else if (word !=","){
+      insert_into_command.set_command_type(kSqlInvalid);
+      return insert_into_command;
+    }
+
+    command_stream >> word;
+  }
+
+  command_stream >> word;
+  if(word != ";"){
+    insert_into_command.set_command_type(kSqlInvalid);
+    return insert_into_command;
+  }
+
+  insert_into_command.set_values(insert_values);
+  return insert_into_command;
 }
 
 //@author: ryecao
@@ -356,7 +548,82 @@ void Interpreter::SqlQuit(std::string& command){
 }
 
 //@author: ryecao
-//@brief: 检查 insert into 语句合法性，创建相应语句对象
+//@brief: 检查 select from 语句合法性，创建相应语句对象
 SqlCommand Interpreter::SqlSelectFrom(std::string& command){
+  SqlCommandSelectFrom select_from_command;
+  select_from_command.set_command_type(kSqlSelectFrom);
+  CommandContentPreProcess(command);
+  std::stringstream command_stream(command);
+  std::string word;
 
+  command_stream >> word;
+  if (word == "*"){
+    select_from_command.set_select_all_columns(true);
+  }
+  else{
+    command_stream >> word;
+    while(LowerCase(word)!="from"){
+      select_from_command.set_column_names(word);
+      command_stream >> word;
+      if (LowerCase(word) != "from" && word !=","){
+        select_from_command.set_command_type(kSqlInvalid);
+        return select_from_command;
+      }
+      command_stream >> word;
+    }
+  }
+
+  command_stream >> word;
+  if (word ==";"){
+    select_from_command.set_select_all_records(true);
+    return select_from_command;
+  }
+
+  else{
+    std::set<std::string> WhereClauseOperators = {"<","<=","=",">=",">","!="};
+    WhereClause clause;
+
+    command_stream >> word;
+    while(word!=";"){
+      clause.kColumnName = word;
+
+      command_stream >> word;
+      if (WhereClauseOperators.find(word) != WhereClauseOperators.end()){
+        clause.kOperator = word;
+      }
+      else{
+        select_from_command.set_command_type(kSqlInvalid);
+        return select_from_command;
+      }
+
+      command_stream >> word;
+      if (word != "'"){
+        select_from_command.set_command_type(kSqlInvalid);
+        return select_from_command;
+      }
+
+      command_stream >> word;
+      clause.kCondition = word;
+
+      if (word != "'"){
+        select_from_command.set_command_type(kSqlInvalid);
+        return select_from_command;
+      }
+
+      select_from_command.set_where_clause(clause);
+
+      command_stream >> word;
+
+      if (word ==";"){
+        break;
+      }
+      else if (LowerCase(word) != "and"){
+        select_from_command.set_command_type(kSqlInvalid);
+        return select_from_command;
+      }
+      command_stream >> word;
+    }
+  }
+
+  return select_from_command;  
 }
