@@ -206,7 +206,6 @@ bool Interpreter::ReadInput(std::stringstream& read_command_stream){
 
 //@author: ryecao
 //@brief: 检查 create table 语句合法性，创建相应语句对象
-//TODO: atrributes, primary key, unique
 SqlCommand Interpreter::SqlCreateTable(std::string& command){
   SqlCommandCreateTable create_table_command;
   create_table_command.set_command_type(kSqlCreateTable);
