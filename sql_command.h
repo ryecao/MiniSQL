@@ -66,12 +66,6 @@ public:
   void set_table_name(std::string& table_name) { table_name_ = table_name; };
   void set_primary_key(std::string& key_name) { primary_key_.push_back(key_name); };
   void set_unique(std::string& key_name) { unique_.push_back(key_name); };
-  void set_attribute(std::string& column_name, std::string type, std::string char_length)
-  {
-    int char_length_int = std::stoi(char_length);
-    auto pointer_to_an_attribute_pair = std::make_pair(column_name, std::make_pair(type, char_length_int));
-    attribute_.insert(pointer_to_an_attribute_pair);
-  }
   std::string table_name() const { return  table_name_; };
   std::vector<std::string> primary_key() const { return  primary_key_; };
   std::vector<std::string> unique() const { return unique_; };
@@ -109,13 +103,10 @@ class SqlCommandDeleteFrom : public SqlCommand
 {
 public:
   void set_table_name(std::string& table_name) { table_name_ = table_name; };
-  void set_where_clause(WhereClause& where_clause) { where_clause_.push_back(where_clause); };
-  void set_delete_all_records(bool delete_all_records) { delete_all_records_ = delete_all_records; };
-  bool delete_all_records() const{ return delete_all_records_; };
+  void set_where_clause(WhereClause where_clause) { where_clause_.push_back(where_clause); };
   std::string table_name() const { return table_name_; };
   std::vector<WhereClause> where_clause() const { return where_clause_; };
 private:
-  bool delete_all_records_;
   std::string table_name_;
   std::vector<WhereClause> where_clause_;
 };
@@ -144,39 +135,18 @@ private:
 };
 
 //@author: ryecao
-//@brief: SQL insert into 语句类
-class SqlCommandInsertInto : public SqlCommand
-{
-public:
-  void set_table_name(std::string& table_name){ table_name_ = table_name; };
-  void set_values(std::vector<std::string>& values){ values_ = values; };
-  std::string table_name() const { return table_name_; };
-  std::vector<std::string> values() const { return values_; };
-private:
-  std::string table_name_;
-  std::vector<std::string> values_;
-};
-
-
-//@author: ryecao
 //@brief: SQL select from 语句类
 class SqlCommandSelectFrom : public SqlCommand
 {
 public:
-  void set_column_names(std::string& column_name){ column_names_.push_back(column_name); };
+  void set_column_name(std::string& column_name){ column_name_ = column_name; };
   void set_table_name(std::string& table_name){ table_name_ = table_name; };
-  void set_where_clause(WhereClause& where_clause){ where_clause_.push_back(where_clause); };
-  void set_select_all_columns(bool select_all_columns){ select_all_columns_ = select_all_columns; };
-  void set_select_all_records(bool select_all_records) { select_all_records_ = select_all_records; };
-  bool select_all_records() const{ return select_all_records_; };
-  bool select_all_columns() const { return select_all_columns_; };  
-  std::vector<std::string> column_names() const { return column_names_; };
+  void set_where_clause(WhereClause where_clause){ where_clause_.push_back(where_clause); };
+  std::string column_name() const { return column_name_; };
   std::string table_name() const { return table_name_; };
   std::vector<WhereClause> where_clause() const { return where_clause_; };
-private:
-  bool select_all_columns_;
-  bool select_all_records_;
-  std::vector<std::string> column_names_;
+public:
+  std::string column_name_;
   std::string table_name_;
   std::vector<WhereClause> where_clause_;
 };
