@@ -8,19 +8,24 @@
 // @file: b_plus_tree.h
 // @brief: A header file of an implementation of b+ tree 
 
+
 #ifndef B_PLUS_TREE_H
 #define B_PLUS_TREE_H
 
-struct BPlusTreeNode
-{
+class BPlusTreeNode {
 	
 };
 
-class BPlusTree
-{
+class _BPlus_Tree_Base {
+public:
+    explicit _BPlus_Tree_Base() {}
+};
+
+class BPlusTree :public _BPlus_Tree_Base {
 public:
 	BPlusTree();
 	~BPlusTree();
 	
 };
+
 #endif
