@@ -26,20 +26,20 @@ class Interpreter
 public:
   Interpreter();
   ~Interpreter();
-  bool ReadInput();
+  SqlCommand* ReadInput();
 private:
-  void SelectSqlCommand(std::string&, std::string&);
-  bool ReadInput(std::stringstream&);
+  SqlCommand* SelectSqlCommand(std::string&, std::string&);
+  SqlCommand* ReadInput(std::stringstream&);
   std::string LowerCase(std::string&);
   std::string CommandContentPreProcess(std::string&);
   std::string  ReplacePartInString(std::string&, const std::string&, const std::string&);
-  SqlCommand SqlCreateTable(std::string&);
-  SqlCommand SqlCreateIndex(std::string&);
-  SqlCommand SqlDeleteFrom(std::string&);
-  SqlCommand SqlDropTable(std::string&);
-  SqlCommand SqlDropIndex(std::string&);
-  SqlCommand SqlInsertInto(std::string&);
-  SqlCommand SqlSelectFrom(std::string&);
+  SqlCommandCreateTable SqlCreateTable(std::string&);
+  SqlCommandCreateIndex SqlCreateIndex(std::string&);
+  SqlCommandDeleteFrom SqlDeleteFrom(std::string&);
+  SqlCommandDropTable SqlDropTable(std::string&);
+  SqlCommandDropIndex SqlDropIndex(std::string&);
+  SqlCommandInsertInto SqlInsertInto(std::string&);
+  SqlCommandSelectFrom SqlSelectFrom(std::string&);
   void SqlExecfile(std::string&);
   void SqlQuit(std::string&);
 private:
