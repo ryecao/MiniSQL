@@ -11,22 +11,25 @@
 //
 // please compile with -std=c++11
 
+#include <string>
 #include "api.h"
 #include "sql_command.h"
-#include <string>
+#include "catalog_manager.h"
+#include "index_manager.h"
+
 
 void API::Switcher(SqlCommand* command){
   SqlCommandType command_type = command->command_type();
   Info info;
   switch(command_type){
     case kSqlInvalid: Info info("Invalid Command, Please check your syntax.");break;
-    case kSqlCreateTable: info = CreateTable(command);
-    case kSqlCreateIndex: info = CreateIndex(command);
-    case kSqlDeleteFrom: info = DeleteFrom(command);
-    case kSqlDropTable: info = DropTable(command);
-    case kSqlDropIndex: info = DropIndex(command);
-    case kSqlInsertInto: info = InsertInto(command);
-    case kSqlSelectFrom: info = SelectFrom(command);
+    case kSqlCreateTable: info = CreateTable(command);break;
+    case kSqlCreateIndex: info = CreateIndex(command);break;
+    case kSqlDeleteFrom: info = DeleteFrom(command);break;
+    case kSqlDropTable: info = DropTable(command);break;
+    case kSqlDropIndex: info = DropIndex(command);break;
+    case kSqlInsertInto: info = InsertInto(command);break;
+    case kSqlSelectFrom: info = SelectFrom(command);break;
   }
   if (command_type != kSqlSelectFrom)
   {
@@ -53,7 +56,7 @@ Info API::DropTable(SqlCommand* command){
 Info API::DropIndex(SqlCommand* command){
 
 }
- 
+
 Info API::InsertInto(SqlCommand* command){
 
 }
