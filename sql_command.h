@@ -64,7 +64,7 @@ class SqlCommandCreateTable : public SqlCommand
 {
 public:
   void set_table_name(std::string& table_name) { table_name_ = table_name; };
-  void set_primary_key(std::string& key_name) { primary_key_.push_back(key_name); };
+  void set_primary_key(std::string& key_name) { primary_key_ = key_name; };
   void set_unique(std::string& key_name) { unique_.push_back(key_name); };
   void set_attribute(std::string& column_name, std::string type, std::string char_length)
   {
@@ -73,13 +73,13 @@ public:
     attribute_.insert(pointer_to_an_attribute_pair);
   }
   std::string table_name() const { return  table_name_; };
-  std::vector<std::string> primary_key() const { return  primary_key_; };
+  std::string primary_key() const { return  primary_key_; };
   std::vector<std::string> unique() const { return unique_; };
   std::map<std::string, std::pair<std::string,int> > attribute() const { return attribute_; };
 private:
   std::string table_name_;
-  //primary keys
-  std::vector<std::string> primary_key_;
+  //primary key
+  std::string primary_key_;
   //unique keys
   std::vector<std::string> unique_;
   //<列名，<类型,长度>>

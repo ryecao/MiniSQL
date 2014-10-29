@@ -1,3 +1,10 @@
+#ifndef B_PLUS_TREE_
+#define B_PLUS_TREE_ value
+
+#include <vector>
+#include <string>
+#include "attribute_type.h"
+
 namespace B_Plus_Tree {    
     class Node {
     public:
@@ -82,3 +89,5 @@ namespace B_Plus_Tree {
         void insertIntoInnerNode(Node &p,const AttrType &K,int p1,int p2);
     };
 };
+
+#endif

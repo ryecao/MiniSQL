@@ -1,3 +1,6 @@
+#ifndef ATTRIBUTE_TYPE_
+#define ATTRIBUTE_TYPE_ value
+
 struct AttrType {
     int idata;
     double fdata;
@@ -38,3 +41,5 @@ struct AttrType {
         return !(lhs==rhs);
     }
 };
+
+#endif

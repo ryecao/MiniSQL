@@ -1,3 +1,8 @@
+#ifndef BLOCK_H_
+#define BLOCK_H_ 
+
+#include <string>
+
 class Block {    
 public:    
     Block():    pos(0)  {}
@@ -10,5 +15,7 @@ public:
 
     int pos;                            //current pointer's pos
     unsigned char data[BLOCK_SIZE];     //data
-    string fname;                       //the filename
+    std::string fname;                       //the filename
 };
+
+#endif
