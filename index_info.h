@@ -6,20 +6,20 @@
 class IndexInfo {
 public:
   IndexInfo();
-  IndexInfo(const string &index_name, const string &table_name, const string &attribute_name)
+  IndexInfo(const std::string &index_name, const std::string &table_name, const std::string &attribute_name)
   {
     name_ = index_name;
     table_name_ = table_name;
     attribute_name_ = attribute_name;
   };
     
-  std::string name();
-  std::string table_name();
-  std::string attribute_name();
+  std::string name(){ return name_; };
+  std::string table_name(){ return table_name_; };
+  std::string attribute_name(){ return attribute_name_; };
 
-  void set_name(std::string);
-  void set_table_name(std::string);
-  void set_attribute_name(std:string);
+  void set_name(std::string &name){ name_ = name; };
+  void set_table_name(std::string &table_name){ table_name_ = table_name; };
+  void set_attribute_name(std::string &attribute_name){ attribute_name_ = attribute_name; };
 private:
   std::string name_;
   std::string table_name_;

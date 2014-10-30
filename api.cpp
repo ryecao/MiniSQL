@@ -56,7 +56,7 @@ Info API::CreateTable(SqlCommand* command){
     table.set_table_name(table_name);
 
     auto attributes = command->attribute();
-    for (auto iterator = attributes.begin(); it != attributes.end(); ++it){
+    for (auto it = attributes.begin(); it != attributes.end(); ++it){
       AttributeInfo single_attribute_info;
       single_attribute_info.set_name(it->first);
 
