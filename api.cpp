@@ -21,16 +21,15 @@
 
 void API::Switcher(SqlCommand* command){
   SqlCommandType command_type = command->command_type();
-  Info info;
   switch(command_type){
-    case kSqlInvalid: Info info("Invalid Command, Please check your syntax.");break;
-    case kSqlCreateTable: info = CreateTable(command);break;
-    case kSqlCreateIndex: info = CreateIndex(command);break;
-    case kSqlDeleteFrom: info = DeleteFrom(command);break;
-    case kSqlDropTable: info = DropTable(command);break;
-    case kSqlDropIndex: info = DropIndex(command);break;
-    case kSqlInsertInto: info = InsertInto(command);break;
-    case kSqlSelectFrom: info = SelectFrom(command);break;
+    case kSqlInvalid: {Info info("Invalid Command, Please check your syntax.");break;}
+    case kSqlCreateTable: {Info info = CreateTable(command);break;}
+    case kSqlCreateIndex: {Info info = CreateIndex(command);break;}
+    case kSqlDeleteFrom: {Info info = DeleteFrom(command);break;}
+    case kSqlDropTable: {Info info = DropTable(command);break;}
+    case kSqlDropIndex: {Info info = DropIndex(command);break;}
+    case kSqlInsertInto: {Info info = InsertInto(command);break;}
+    case kSqlSelectFrom: {Info info = SelectFrom(command);break;}
   }
   if (command_type != kSqlSelectFrom)
   {
@@ -123,12 +122,12 @@ Info API::CreateIndex(SqlCommand* command){
     error_info = "ERROR:Index \"" + index_name + "\" already exists.";
     return Info(error_info);
   }
-  if (!CatalogManager.HasTable(table_name)){
+  if (!catalog_manager.HasTable(table_name)){
     std::string error_info;
     error_info = "ERROR:table \"" + table_name + "\" not exists.";
     return Info(error_info);
   }
-  else if(!CatalogManager.GetTableInfo(table_name).HasAttribute(attribute_name)){
+  else if(!catalog_manager.GetTableInfo(table_name).HasAttribute(attribute_name)){
     std::string error_info;
     error_info = "ERROR:attribute \"" + attribute_name + "\" not exists.";
     return Info(error_info);

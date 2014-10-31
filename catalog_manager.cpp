@@ -40,7 +40,7 @@ bool CatalogManager::HasAttribute(const std::string &table_name, const std::stri
 
   TableInfo table = GetTableInfo(table_name);
 
-  if (table.attribute(attribute_name)){
+  if (table.HasAttribute(attribute_name)){
     return true;
   }
   else{
@@ -75,13 +75,14 @@ bool CatalogManager::RegisterTable(const TableInfo &table){
   return true;
 }
 
-void WriteTableInfo(const TableInfo& table){
+void CatalogManager::WriteTableInfo(const TableInfo& table){
   RegisterTable(table);
 }
 
 bool CatalogManager::DropTable(const std::string &table_name){
   std::string file_name = table_name + "_t.cata";
-  if (std::remove(file_name)){
+  const char* file_name_cc = file_name.c_str();
+  if (std::remove(file_name_cc)){
     return true;
   }
   else{
@@ -90,7 +91,6 @@ bool CatalogManager::DropTable(const std::string &table_name){
 }
 
 TableInfo CatalogManager::GetTableInfo(const std::string &table_name){
-  std::string table_name = table.table_name();
   std::string file_name = table_name + "_t.cata";
   std::ifstream file_table_in(file_name, std::ios::binary);
 
@@ -100,6 +100,8 @@ TableInfo CatalogManager::GetTableInfo(const std::string &table_name){
   int length;
   bool is_unique;
   bool is_primary_key;
+  std::string table_name_in_file;
+  std::string attribute_name;
   std::string index_name;
   std::vector<std::string> index_names;
 
@@ -107,8 +109,9 @@ TableInfo CatalogManager::GetTableInfo(const std::string &table_name){
   std::string line;
   while(std::getline(file_table_in, line)){
     if (flag == 0){
-      std::stringstream(line) >> table_name >> attribute_number;
-      table.set_table_name(table_name);
+      std::stringstream line_stream(line);
+      line_stream >> table_name_in_file >> attribute_number;
+      table.set_table_name(table_name_in_file);
       table.set_attribute_number(attribute_number);
       flag++;
     }
@@ -144,7 +147,8 @@ bool CatalogManager::RegisterIndex(const IndexInfo& index){
 
 bool CatalogManager::DropIndex(const std::string &index_name){
   std::string file_name = index_name + "_i.cata";
-  if (std::remove(file_name)){
+  const char *file_name_cc = file_name.c_str();
+  if (std::remove(file_name_cc)){
     return true;
   }
   else{
@@ -155,9 +159,10 @@ bool CatalogManager::DropIndex(const std::string &index_name){
 IndexInfo CatalogManager::GetIndexInfo(const std::string &index_name){
   std::string file_name = index_name + "_i.cata";
   std::ifstream file_index_in(file_name,std::ios::binary);
+  std::string index;
   std::string table_name;
   std::string attribute_name;
-  file_index_in >> index_name >> table_name >> attribute_name;
+  file_index_in >> index >> table_name >> attribute_name;
 
   return IndexInfo(index_name, table_name, attribute_name);  
 }

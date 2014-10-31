@@ -1,15 +1,17 @@
 #ifndef ATTRIBUTE_TYPE_
 #define ATTRIBUTE_TYPE_ value
 
+#include <string>
+
 struct AttrType {
     int idata;
     double fdata;
-    string sdata;
+    std::string sdata;
     int t;
     AttrType():             t(-1)           {}
     AttrType(int d):        idata(d),t(0)    {}
     AttrType(double d):     fdata(d),t(1)    {}
-    AttrType(string d):     sdata(d),t(2)    {}    
+    AttrType(std::string d):     sdata(d),t(2)    {}    
     friend bool operator<(const AttrType &lhs, const AttrType &rhs) {
         int t=lhs.t;
         if(t==0)    return lhs.idata<rhs.idata;

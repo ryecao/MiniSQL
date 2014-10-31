@@ -7,6 +7,7 @@
 
 class AttributeInfo {
 public:
+  AttributeInfo();
   AttributeInfo(std::string& name, int type, int length, std::vector<std::string>& index_names, bool is_unique, bool is_primary_key)
                 :name_(name), type_(type), length_(length), index_names_(index_names), is_unique_(is_unique), is_primary_key_(is_primary_key_){};    
   std::string name(){ return name_; }; //get the attribute's name
@@ -16,12 +17,12 @@ public:
   bool is_unique(){ return is_unique_; }; //return true if the attribute is unique
   bool is_primary_key(){ return is_primary_key_; }; //return true if the attribute is a primary key
     
-  void  set_name(std::string& name){ name_ = name;}; 
-  void  set_type(int type){ type_ = type; }; 
-  void  set_length(int length){ length_ = length; }; 
-  void  set_index_names(std::vector<std::string> index_names){ index_names_ = index_names; };
-  void  set_is_unique(bool is_unique){ is_unique_ = is_unique; };
-  void  set_is_primary_key(bool is_primary_key){ is_primary_key_ = is_primary_key; }; 
+  void  set_name(const std::string& name){ name_ = name;}; 
+  void  set_type(const int type){ type_ = type; }; 
+  void  set_length(const int length){ length_ = length; }; 
+  void  set_index_names(const std::vector<std::string> index_names){ index_names_ = index_names; };
+  void  set_is_unique(const bool is_unique){ is_unique_ = is_unique; };
+  void  set_is_primary_key(const bool is_primary_key){ is_primary_key_ = is_primary_key; }; 
 private:
   std::string name_;
   int type_;
@@ -36,17 +37,26 @@ public:
   TableInfo();
   TableInfo(const std::string &table_name, const std::map<std::string,AttributeInfo> &attribute_info)
             :table_name_(table_name), attribute_info_(attribute_info){};
-  int attribute_number() { return attribute_number_; }; //get the number of table's attributes
-  std::string table_name(){ return table_name_; }; //get the table's name
+  int attribute_number() const{ return attribute_number_; }; //get the number of table's attributes
+  std::string table_name() const{ return table_name_; }; //get the table's name
   AttributeInfo attribute(const std::string& attribute_name){ return attribute_info_[attribute_name]; }; //get the attribute's information    
-  std::map<std::string,AttributeInfo> all_attributes(){ return attribute_info_; };
+  bool HasAttribute(const std::string& attribute_name) const{ 
+    auto search = attribute_info_.find(attribute_name);  
+    if (search != attribute_info_.end()){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+  std::map<std::string,AttributeInfo> all_attributes() const{ return attribute_info_; };
 
-  void add_attribute(AttributeInfo& info){
+  void add_attribute(AttributeInfo info){
     auto pointer_to_an_attribute_info = std::make_pair(info.name(), info);
     attribute_info_.insert(pointer_to_an_attribute_info);
   };
-  void set_table_name(std::string& table_name){ table_name_=table_name; }; //set the table's name
-  void set_attribute_number(int attribute_number){ attribute_number_ = attribute_number; }; //set the table's name
+  void set_table_name(const std::string& table_name){ table_name_=table_name; }; //set the table's name
+  void set_attribute_number(const int attribute_number){ attribute_number_ = attribute_number; }; //set the table's name
 
 private:
   std::string table_name_;

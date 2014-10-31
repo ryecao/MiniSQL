@@ -13,9 +13,9 @@ public:
     attribute_name_ = attribute_name;
   };
     
-  std::string name(){ return name_; };
-  std::string table_name(){ return table_name_; };
-  std::string attribute_name(){ return attribute_name_; };
+  std::string name() const{ return name_; };
+  std::string table_name() const{ return table_name_; };
+  std::string attribute_name() const{ return attribute_name_; };
 
   void set_name(std::string &name){ name_ = name; };
   void set_table_name(std::string &table_name){ table_name_ = table_name; };
