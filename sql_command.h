@@ -53,6 +53,24 @@ public:
   void set_database_name(std::string& database_name) { database_name_ = database_name; };
   SqlCommandType command_type() const { return command_type_; };
   std::string database_name() const {return database_name_; };
+  // virtual set_table_name();
+  // virtual set_primary_key();
+  // virtual set_unique();
+  // virtual set_attribute();
+  // virtual set_values();
+  // virtual set_index_name();
+  // virtual set_where_clause();
+  // virtual set_column_name();
+  // virtual set_column_names();
+  // virtual set_delete_all_records();
+  // virtual set_select_all_columns();
+  // virtual set_select_all_records();
+  virtual std::string table_name();
+  virtual std::string index_name();
+  virtual std::string column_name();
+  virtual std::string primary_key();
+  virtual std::vector<std::string> unique();
+  virtual std::map<std::string, std::pair<std::string,int> > attribute();
 protected:
   SqlCommandType command_type_;
   std::string database_name_;

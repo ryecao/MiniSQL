@@ -12,6 +12,7 @@
 // please compile with -std=c++11
 
 #include <string>
+#include <algorithm>
 #include "api.h"
 #include "sql_command.h"
 #include "catalog_manager.h"
@@ -22,18 +23,14 @@
 void API::Switcher(SqlCommand* command){
   SqlCommandType command_type = command->command_type();
   switch(command_type){
-    case kSqlInvalid: {Info info("Invalid Command, Please check your syntax.");break;}
-    case kSqlCreateTable: {Info info = CreateTable(command);break;}
-    case kSqlCreateIndex: {Info info = CreateIndex(command);break;}
-    case kSqlDeleteFrom: {Info info = DeleteFrom(command);break;}
-    case kSqlDropTable: {Info info = DropTable(command);break;}
-    case kSqlDropIndex: {Info info = DropIndex(command);break;}
-    case kSqlInsertInto: {Info info = InsertInto(command);break;}
-    case kSqlSelectFrom: {Info info = SelectFrom(command);break;}
-  }
-  if (command_type != kSqlSelectFrom)
-  {
-    info.PrintInfo();
+    case kSqlInvalid: {Info info("Invalid Command, Please check your syntax."); info.PrintInfo(); break;}
+    case kSqlCreateTable: {Info info = CreateTable(command); info.PrintInfo(); break;}
+    case kSqlCreateIndex: {Info info = CreateIndex(command); info.PrintInfo(); break;}
+    case kSqlDeleteFrom: {Info info = DeleteFrom(command); info.PrintInfo(); break;}
+    case kSqlDropTable: {Info info = DropTable(command); info.PrintInfo(); break;}
+    case kSqlDropIndex: {Info info = DropIndex(command); info.PrintInfo(); break;}
+    case kSqlInsertInto: {Info info = InsertInto(command); info.PrintInfo(); break;}
+    case kSqlSelectFrom: {Info info = SelectFrom(command); break;}
   }
 }
 
@@ -54,7 +51,7 @@ Info API::CreateTable(SqlCommand* command){
   else{
     table.set_table_name(table_name);
 
-    auto attributes = command->attribute();
+    std::map<std::string, std::pair<std::string,int>> attributes = command->attribute();
     for (auto it = attributes.begin(); it != attributes.end(); ++it){
       AttributeInfo single_attribute_info;
       single_attribute_info.set_name(it->first);
@@ -62,17 +59,17 @@ Info API::CreateTable(SqlCommand* command){
       attribute_count++;
 
       //判断类型是否有效
-      if (it->second->first != "char" && it->second->first != "int" && it->second->first != "float"){
+      if (it->second.first != "char" && it->second.first != "int" && it->second.first != "float"){
         std::string error_info;
-        error_info = "ERROR:The type \"" + it->second->first + "\" of attribute" + it->first + "is invalid.";
+        error_info = "ERROR:The type \"" + it->second.first + "\" of attribute" + it->first + "is invalid.";
         return Info(error_info);
       }
       else{
-        single_attribute_info.set_type(it->second->first);
+        single_attribute_info.set_type(it->second.first);
 
         //判断char(n) n是否在1~255的范围内
-        if (0<it->second<256){
-          single_attribute_info.set_length(it->second->second);
+        if (0<it->second.second<256){
+          single_attribute_info.set_length(it->second.second);
         }
         else{
           std::string error_info;
@@ -97,7 +94,7 @@ Info API::CreateTable(SqlCommand* command){
         single_attribute_info.set_is_unique(false);
       }
 
-      table.add_atrribute(single_attribute_info);
+      table.add_attribute(single_attribute_info);
     }
     table.set_attribute_number(attribute_count);
 
@@ -117,7 +114,7 @@ Info API::CreateIndex(SqlCommand* command){
   std::string attribute_name = command->column_name();
   std::string table_name = command->table_name();
 
-  if (index_manager.HasIndex(index_name)){
+  if (catalog_manager.HasIndex(index_name)){
     std::string error_info;
     error_info = "ERROR:Index \"" + index_name + "\" already exists.";
     return Info(error_info);

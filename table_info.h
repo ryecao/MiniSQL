@@ -18,7 +18,17 @@ public:
   bool is_primary_key(){ return is_primary_key_; }; //return true if the attribute is a primary key
     
   void  set_name(const std::string& name){ name_ = name;}; 
-  void  set_type(const int type){ type_ = type; }; 
+  void  set_type(const std::string& type){
+    if (type == "int"){
+      type_ = 0;
+    }
+    else if (type == "float"){
+      type_ = 1;
+    }
+    else if (type == "char"){
+      type_ = 2;
+    }    
+  }; 
   void  set_length(const int length){ length_ = length; }; 
   void  set_index_names(const std::vector<std::string> index_names){ index_names_ = index_names; };
   void  set_is_unique(const bool is_unique){ is_unique_ = is_unique; };
