@@ -126,7 +126,7 @@ namespace B_Plus_Tree {
             puts("K");
             for(auto x:K)   std::cout<<x<<" ";   std::cout<<std::endl;
         }
-    // private:
+    private:
         bool isleaf, isroot;        
         std::vector<int> P;
         std::vector<AttrType> K;
@@ -464,17 +464,7 @@ namespace B_Plus_Tree {
         }
     };
 }
-void test() {
-    using namespace B_Plus_Tree;
-    Node u;
-    u.isleaf=u.isroot=1;
-    for(int i=0;i<10;++i)   u.appendP(i);
-    for(int i=0;i<20;++i)   u.appendK(AttrType(123.3));
-    Block b;
-    u.writeToBlock(b);
-    Node u2(b);
-    u2.show();
-}
+
 #ifdef LOCAL_TEST
 int main(int argc, char const *argv[]) {
     // dd();
