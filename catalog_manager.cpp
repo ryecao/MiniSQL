@@ -108,7 +108,8 @@ TableInfo CatalogManager::GetTableInfo(const std::string &table_name){
   int flag = 0;
   std::string line;
   while(std::getline(file_table_in, line)){
-    if (flag == 0){
+    index_names.clear();
+    if (flag == 0){qu
       std::stringstream line_stream(line);
       line_stream >> table_name_in_file >> attribute_number;
       table.set_table_name(table_name_in_file);

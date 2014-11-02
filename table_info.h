@@ -7,9 +7,9 @@
 
 class AttributeInfo {
 public:
-  AttributeInfo();
-  AttributeInfo(std::string& name, int type, int length, std::vector<std::string>& index_names, bool is_unique, bool is_primary_key)
-                :name_(name), type_(type), length_(length), index_names_(index_names), is_unique_(is_unique), is_primary_key_(is_primary_key_){};    
+  AttributeInfo(){};
+  AttributeInfo(const std::string& name, int type, int length, const std::vector<std::string>& index_names, bool is_unique, bool is_primary_key)
+                :name_(name), type_(type), length_(length), index_names_(index_names), is_unique_(is_unique), is_primary_key_(is_primary_key){};    
   std::string name(){ return name_; }; //get the attribute's name
   int type(){ return type_; }; //return the attribute's type
   int length(){ return length_; }; //return the length of the attribute
@@ -44,9 +44,10 @@ private:
 
 class TableInfo {
 public:
-  TableInfo();
+  TableInfo(){attribute_number_ = 0;};
+  TableInfo(const std::string &table_name): table_name_(table_name),attribute_number_(0) {};
   TableInfo(const std::string &table_name, const std::map<std::string,AttributeInfo> &attribute_info)
-            :table_name_(table_name), attribute_info_(attribute_info){};
+            :table_name_(table_name), attribute_info_(attribute_info){attribute_number_ = 0};
   int attribute_number() const{ return attribute_number_; }; //get the number of table's attributes
   std::string table_name() const{ return table_name_; }; //get the table's name
   AttributeInfo attribute(const std::string& attribute_name){ return attribute_info_[attribute_name]; }; //get the attribute's information    
@@ -64,6 +65,7 @@ public:
   void add_attribute(AttributeInfo info){
     auto pointer_to_an_attribute_info = std::make_pair(info.name(), info);
     attribute_info_.insert(pointer_to_an_attribute_info);
+    attribute_number_++;
   };
   void set_table_name(const std::string& table_name){ table_name_=table_name; }; //set the table's name
   void set_attribute_number(const int attribute_number){ attribute_number_ = attribute_number; }; //set the table's name
