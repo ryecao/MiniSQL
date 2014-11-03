@@ -25,7 +25,6 @@ class Interpreter
 {   
 public:
   Interpreter();
-  ~Interpreter();
   SqlCommand* ReadInput();
 private:
   SqlCommand* SelectSqlCommand(std::string&, std::string&);

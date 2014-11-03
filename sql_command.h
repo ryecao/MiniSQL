@@ -17,7 +17,6 @@
 #include <string>
 #include <map>
 #include <vector>
-#include "sql_command.h"
 
 //@author: ryecao
 //@brief: SQL 语句类型
@@ -65,12 +64,12 @@ public:
   // virtual set_delete_all_records();
   // virtual set_select_all_columns();
   // virtual set_select_all_records();
-  virtual std::string table_name();
-  virtual std::string index_name();
-  virtual std::string column_name();
-  virtual std::string primary_key();
-  virtual std::vector<std::string> unique();
-  virtual std::map<std::string, std::pair<std::string,int> > attribute();
+  virtual std::string table_name() const = 0;
+  virtual std::string index_name() const = 0;
+  virtual std::string column_name() const = 0;
+  virtual std::string primary_key() const = 0;
+  virtual std::vector<std::string> unique() const = 0;
+  virtual std::map<std::string, std::pair<std::string,int>> attribute() const = 0;
 protected:
   SqlCommandType command_type_;
   std::string database_name_;
@@ -84,16 +83,21 @@ public:
   void set_table_name(std::string& table_name) { table_name_ = table_name; };
   void set_primary_key(std::string& key_name) { primary_key_ = key_name; };
   void set_unique(std::string& key_name) { unique_.push_back(key_name); };
+  void set_attribute_name_ordered(std::string& attribute_name){attribute_name_ordered_.push_back(attribute_name);};
   void set_attribute(std::string& column_name, std::string type, std::string char_length)
   {
     int char_length_int = std::stoi(char_length);
     auto pointer_to_an_attribute_pair = std::make_pair(column_name, std::make_pair(type, char_length_int));
     attribute_.insert(pointer_to_an_attribute_pair);
   }
-  std::string table_name() const { return  table_name_; };
-  std::string primary_key() const { return  primary_key_; };
-  std::vector<std::string> unique() const { return unique_; };
-  std::map<std::string, std::pair<std::string,int> > attribute() const { return attribute_; };
+  virtual std::string index_name() const{};
+  virtual std::string column_name() const{};
+  
+  virtual std::string table_name() const { return  table_name_; };
+  virtual std::string primary_key() const { return  primary_key_; };
+  virtual std::vector<std::string> unique() const { return unique_; };
+  virtual std::map<std::string, std::pair<std::string,int> > attribute() const { return attribute_; };
+  std::vector<std::string> attribute_name_ordered() const {return attribute_name_ordered_;};
 private:
   std::string table_name_;
   //primary key
@@ -102,6 +106,7 @@ private:
   std::vector<std::string> unique_;
   //<列名，<类型,长度>>
   std::map<std::string, std::pair<std::string,int> > attribute_;
+  std::vector<std::string> attribute_name_ordered_;
 };
 
 //@author: ryecao
@@ -112,9 +117,14 @@ public:
   void set_index_name(std::string& index_name){ index_name_ = index_name; };
   void set_table_name(std::string& table_name){ table_name_ = table_name; };
   void set_column_name(std::string& column_name){ column_name_ = column_name; };
-  std::string index_name() const { return index_name_; };
-  std::string table_name() const { return table_name_; };
-  std::string column_name() const { return column_name_; };
+
+  virtual std::string primary_key() const{};
+  virtual std::vector<std::string> unique() const{};
+  virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
+
+  virtual std::string index_name() const { return index_name_; };
+  virtual std::string table_name() const { return table_name_; };
+  virtual std::string column_name() const { return column_name_; };
 private:
   std::string index_name_;
   std::string table_name_;
@@ -129,8 +139,15 @@ public:
   void set_table_name(std::string& table_name) { table_name_ = table_name; };
   void set_where_clause(WhereClause& where_clause) { where_clause_.push_back(where_clause); };
   void set_delete_all_records(bool delete_all_records) { delete_all_records_ = delete_all_records; };
+  
+  virtual std::string index_name() const{};
+  virtual std::string column_name() const{};
+  virtual std::string primary_key() const{};
+  virtual std::vector<std::string> unique() const{};
+  virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
+
   bool delete_all_records() const{ return delete_all_records_; };
-  std::string table_name() const { return table_name_; };
+  virtual std::string table_name() const { return table_name_; };
   std::vector<WhereClause> where_clause() const { return where_clause_; };
 private:
   bool delete_all_records_;
@@ -144,7 +161,14 @@ class SqlCommandDropTable : public SqlCommand
 {
 public:
   void set_table_name(std::string& table_name) { table_name_ = table_name; };
-  std::string table_name() const { return table_name_; };
+
+  virtual std::string index_name() const{};
+  virtual std::string column_name() const{};
+  virtual std::string primary_key() const{};
+  virtual std::vector<std::string> unique() const{};
+  virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
+
+  virtual std::string table_name() const { return table_name_; };
 private:
   std::string table_name_;
 };
@@ -155,7 +179,14 @@ class SqlCommandDropIndex : public SqlCommand
 {
 public:
   void set_index_name(std::string& index_name) { index_name_ = index_name; };
-  std::string index_name() const { return index_name_; };
+
+  virtual std::string table_name() const{};
+  virtual std::string column_name() const{};
+  virtual std::string primary_key() const{};
+  virtual std::vector<std::string> unique() const{};
+  virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
+
+  virtual std::string index_name() const { return index_name_; };
 private:
   std::string index_name_;
   
@@ -168,7 +199,14 @@ class SqlCommandInsertInto : public SqlCommand
 public:
   void set_table_name(std::string& table_name){ table_name_ = table_name; };
   void set_values(std::vector<std::string>& values){ values_ = values; };
-  std::string table_name() const { return table_name_; };
+
+  virtual std::string index_name() const{};
+  virtual std::string column_name() const{};
+  virtual std::string primary_key() const{};
+  virtual std::vector<std::string> unique() const{};
+  virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
+
+  virtual std::string table_name() const { return table_name_; };
   std::vector<std::string> values() const { return values_; };
 private:
   std::string table_name_;
@@ -186,10 +224,17 @@ public:
   void set_where_clause(WhereClause& where_clause){ where_clause_.push_back(where_clause); };
   void set_select_all_columns(bool select_all_columns){ select_all_columns_ = select_all_columns; };
   void set_select_all_records(bool select_all_records) { select_all_records_ = select_all_records; };
+
+  virtual std::string index_name() const{};
+  virtual std::string column_name() const{};
+  virtual std::string primary_key() const{};
+  virtual std::vector<std::string> unique() const{};
+  virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
+
   bool select_all_records() const{ return select_all_records_; };
   bool select_all_columns() const { return select_all_columns_; };  
   std::vector<std::string> column_names() const { return column_names_; };
-  std::string table_name() const { return table_name_; };
+  virtual std::string table_name() const { return table_name_; };
   std::vector<WhereClause> where_clause() const { return where_clause_; };
 private:
   bool select_all_columns_;
