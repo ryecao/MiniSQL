@@ -221,6 +221,22 @@ private:
   
 };
 
+class SqlCommandExecfile : public SqlCommand
+{
+public:
+  SqlCommandExecfile(){SqlCommand::set_command_type(kSqlExecfile);};
+  SqlCommandExecfile(const SqlCommandExecfile& e){
+    SqlCommand::set_command_type(e.command_type());
+  };
+  virtual std::string table_name() const{};
+  virtual std::string column_name() const{};
+  virtual std::string primary_key() const{};
+  virtual std::vector<std::string> unique() const{};
+  virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
+  virtual std::vector<std::string> attribute_name_ordered() const{};
+  virtual std::string index_name() const {};
+
+};
 //@author: ryecao
 //@brief: SQL insert into 语句类
 class SqlCommandInsertInto : public SqlCommand

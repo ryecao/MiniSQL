@@ -115,6 +115,7 @@ SqlCommand* Interpreter::SelectSqlCommand(std::string& command_type, std::string
   }
   else if (command_type == "execfile"){
     SqlExecfile(command_content);
+    sql_command = new SqlCommandExecfile();
   }
   else if (command_type == "insert into"){
     SqlCommandInsertInto sql_command_insert_into;
@@ -147,7 +148,14 @@ SqlCommand* Interpreter::ReadInput(){
   LowerCase(first_word);
 
   command_type = first_word;
-  
+  if (first_word.back()==';'){
+      is_command_type_valid = false;
+      SqlCommand* sc = NULL;
+      SqlCommandCreateTable sct;
+      sct.set_command_type(kSqlInvalid);
+      sc = new SqlCommandCreateTable(sct);
+      return sc;
+  }
   if(first_word != "select" && first_word != "quit" && first_word != "quit;" && first_word != "execfile" ){
     std::cin >> second_word;
     LowerCase(second_word);
@@ -570,7 +578,7 @@ void Interpreter::SqlExecfile(std::string& command){
       api.Switcher(ReadInput(read_command_stream));      
     }
   }
-  std::exit(1);
+  //std::exit(1);
 }
 
 //@author: ryecao
