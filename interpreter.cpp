@@ -15,6 +15,7 @@
 
 #include "interpreter.h"
 #include "sql_command.h"
+#include "api.h"
 #include <string>
 #include <set>
 #include <algorithm>
@@ -557,6 +558,7 @@ void Interpreter::SqlExecfile(std::string& command){
   command_stream >> filename;
 
   std::ifstream file(filename);
+  API api;
   if (!file.is_open()){
     std::cout<<"File could not be opened. Please check your input."<<std::endl;
   }
@@ -564,9 +566,11 @@ void Interpreter::SqlExecfile(std::string& command){
     while(!file.eof()){
       file.getline(read_buffer,256);
       std::stringstream read_command_stream(read_buffer);
-      ReadInput(read_command_stream);      
+
+      api.Switcher(ReadInput(read_command_stream));      
     }
   }
+  std::exit(1);
 }
 
 //@author: ryecao
