@@ -47,7 +47,7 @@ public:
   TableInfo(){attribute_number_ = 0;};
   TableInfo(const std::string &table_name): table_name_(table_name),attribute_number_(0) {};
   TableInfo(const std::string &table_name, const std::map<std::string,AttributeInfo> &attribute_info)
-            :table_name_(table_name), attribute_info_(attribute_info){attribute_number_ = 0};
+            :table_name_(table_name), attribute_info_(attribute_info){attribute_number_ = 0;};
   int attribute_number() const{ return attribute_number_; }; //get the number of table's attributes
   std::string table_name() const{ return table_name_; }; //get the table's name
   AttributeInfo attribute(const std::string& attribute_name){ return attribute_info_[attribute_name]; }; //get the attribute's information    

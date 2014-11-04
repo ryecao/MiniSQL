@@ -48,28 +48,20 @@ struct WhereClause
 class SqlCommand
 {
 public:
+  SqlCommand(){};
+  SqlCommand(SqlCommandType sct){command_type_ = sct;};
   void set_command_type(SqlCommandType command_type) { command_type_ = command_type; };
   void set_database_name(std::string& database_name) { database_name_ = database_name; };
   SqlCommandType command_type() const { return command_type_; };
   std::string database_name() const {return database_name_; };
-  // virtual set_table_name();
-  // virtual set_primary_key();
-  // virtual set_unique();
-  // virtual set_attribute();
-  // virtual set_values();
-  // virtual set_index_name();
-  // virtual set_where_clause();
-  // virtual set_column_name();
-  // virtual set_column_names();
-  // virtual set_delete_all_records();
-  // virtual set_select_all_columns();
-  // virtual set_select_all_records();
+
   virtual std::string table_name() const = 0;
   virtual std::string index_name() const = 0;
   virtual std::string column_name() const = 0;
   virtual std::string primary_key() const = 0;
   virtual std::vector<std::string> unique() const = 0;
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const = 0;
+  virtual std::vector<std::string> attribute_name_ordered() const = 0;
 protected:
   SqlCommandType command_type_;
   std::string database_name_;
@@ -80,6 +72,13 @@ protected:
 class SqlCommandCreateTable : public SqlCommand
 {
 public:
+  SqlCommandCreateTable(){};
+  SqlCommandCreateTable(const SqlCommandCreateTable& ct){
+    SqlCommand::set_command_type(ct.command_type());
+    table_name_=ct.table_name();primary_key_=ct.primary_key();
+    unique_=ct.unique();attribute_=ct.attribute();
+    attribute_name_ordered_=ct.attribute_name_ordered();
+  };
   void set_table_name(std::string& table_name) { table_name_ = table_name; };
   void set_primary_key(std::string& key_name) { primary_key_ = key_name; };
   void set_unique(std::string& key_name) { unique_.push_back(key_name); };
@@ -97,7 +96,7 @@ public:
   virtual std::string primary_key() const { return  primary_key_; };
   virtual std::vector<std::string> unique() const { return unique_; };
   virtual std::map<std::string, std::pair<std::string,int> > attribute() const { return attribute_; };
-  std::vector<std::string> attribute_name_ordered() const {return attribute_name_ordered_;};
+  virtual std::vector<std::string> attribute_name_ordered() const {return attribute_name_ordered_;};
 private:
   std::string table_name_;
   //primary key
@@ -114,6 +113,13 @@ private:
 class SqlCommandCreateIndex : public SqlCommand
 {
 public:
+  SqlCommandCreateIndex(){};
+  SqlCommandCreateIndex(const SqlCommandCreateIndex& ci){
+    SqlCommand::set_command_type(ci.command_type());
+    index_name_=ci.index_name();
+    table_name_=ci.table_name();
+    column_name_=ci.column_name();
+  };
   void set_index_name(std::string& index_name){ index_name_ = index_name; };
   void set_table_name(std::string& table_name){ table_name_ = table_name; };
   void set_column_name(std::string& column_name){ column_name_ = column_name; };
@@ -121,6 +127,7 @@ public:
   virtual std::string primary_key() const{};
   virtual std::vector<std::string> unique() const{};
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
+  virtual std::vector<std::string> attribute_name_ordered() const{};
 
   virtual std::string index_name() const { return index_name_; };
   virtual std::string table_name() const { return table_name_; };
@@ -136,6 +143,13 @@ private:
 class SqlCommandDeleteFrom : public SqlCommand
 {
 public:
+  SqlCommandDeleteFrom(){};
+  SqlCommandDeleteFrom(const SqlCommandDeleteFrom& df){
+    SqlCommand::set_command_type(df.command_type());
+    delete_all_records_=df.delete_all_records();
+    table_name_=df.table_name();
+    where_clause_=df.where_clause();
+  };
   void set_table_name(std::string& table_name) { table_name_ = table_name; };
   void set_where_clause(WhereClause& where_clause) { where_clause_.push_back(where_clause); };
   void set_delete_all_records(bool delete_all_records) { delete_all_records_ = delete_all_records; };
@@ -145,6 +159,7 @@ public:
   virtual std::string primary_key() const{};
   virtual std::vector<std::string> unique() const{};
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
+  virtual std::vector<std::string> attribute_name_ordered() const{};
 
   bool delete_all_records() const{ return delete_all_records_; };
   virtual std::string table_name() const { return table_name_; };
@@ -160,6 +175,12 @@ private:
 class SqlCommandDropTable : public SqlCommand
 {
 public:
+  SqlCommandDropTable(){};
+  SqlCommandDropTable(const SqlCommandDropTable& dt){
+    SqlCommand::set_command_type(dt.command_type());
+    table_name_=dt.table_name();
+  };
+
   void set_table_name(std::string& table_name) { table_name_ = table_name; };
 
   virtual std::string index_name() const{};
@@ -167,6 +188,7 @@ public:
   virtual std::string primary_key() const{};
   virtual std::vector<std::string> unique() const{};
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
+  virtual std::vector<std::string> attribute_name_ordered() const{};
 
   virtual std::string table_name() const { return table_name_; };
 private:
@@ -178,6 +200,12 @@ private:
 class SqlCommandDropIndex : public SqlCommand
 {
 public:
+  SqlCommandDropIndex(){};
+  SqlCommandDropIndex(const SqlCommandDropIndex& di){
+    SqlCommand::set_command_type(di.command_type());
+    index_name_=di.index_name();
+  };
+
   void set_index_name(std::string& index_name) { index_name_ = index_name; };
 
   virtual std::string table_name() const{};
@@ -185,6 +213,7 @@ public:
   virtual std::string primary_key() const{};
   virtual std::vector<std::string> unique() const{};
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
+  virtual std::vector<std::string> attribute_name_ordered() const{};
 
   virtual std::string index_name() const { return index_name_; };
 private:
@@ -197,6 +226,13 @@ private:
 class SqlCommandInsertInto : public SqlCommand
 {
 public:
+  SqlCommandInsertInto(){};
+  SqlCommandInsertInto(const SqlCommandInsertInto& ii){
+    SqlCommand::set_command_type(ii.command_type());
+    table_name_=ii.table_name();
+    values_=ii.values();
+  };
+
   void set_table_name(std::string& table_name){ table_name_ = table_name; };
   void set_values(std::vector<std::string>& values){ values_ = values; };
 
@@ -205,6 +241,7 @@ public:
   virtual std::string primary_key() const{};
   virtual std::vector<std::string> unique() const{};
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
+  virtual std::vector<std::string> attribute_name_ordered() const{};
 
   virtual std::string table_name() const { return table_name_; };
   std::vector<std::string> values() const { return values_; };
@@ -219,6 +256,16 @@ private:
 class SqlCommandSelectFrom : public SqlCommand
 {
 public:
+  SqlCommandSelectFrom(){};
+  SqlCommandSelectFrom(const SqlCommandSelectFrom& sf){
+    SqlCommand::set_command_type(sf.command_type());
+    select_all_columns_=sf.select_all_columns();
+    select_all_records_=sf.select_all_records();
+    column_names_=sf.column_names();
+    table_name_=sf.table_name();
+    where_clause_=sf.where_clause();
+  };
+
   void set_column_names(std::string& column_name){ column_names_.push_back(column_name); };
   void set_table_name(std::string& table_name){ table_name_ = table_name; };
   void set_where_clause(WhereClause& where_clause){ where_clause_.push_back(where_clause); };
@@ -230,12 +277,13 @@ public:
   virtual std::string primary_key() const{};
   virtual std::vector<std::string> unique() const{};
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
+  virtual std::vector<std::string> attribute_name_ordered() const{};
 
-  bool select_all_records() const{ return select_all_records_; };
-  bool select_all_columns() const { return select_all_columns_; };  
-  std::vector<std::string> column_names() const { return column_names_; };
+  virtual bool select_all_records() const{ return select_all_records_; };
+  virtual bool select_all_columns() const { return select_all_columns_; };  
+  virtual std::vector<std::string> column_names() const { return column_names_; };
   virtual std::string table_name() const { return table_name_; };
-  std::vector<WhereClause> where_clause() const { return where_clause_; };
+  virtual std::vector<WhereClause> where_clause() const { return where_clause_; };
 private:
   bool select_all_columns_;
   bool select_all_records_;

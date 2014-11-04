@@ -33,17 +33,15 @@ private:
 class API
 {
 public:
-  API();
-  ~API();
   void Switcher(SqlCommand*);
 private:
-  Info CreateTable(SqlCommand*);
-  Info CreateIndex(SqlCommand*);
-  Info DeleteFrom(SqlCommand*);
-  Info DropTable(SqlCommand*);
-  Info DropIndex(SqlCommand*); 
-  Info InsertInto(SqlCommand*);
-  Info SelectFrom(SqlCommand*);
+  Info CreateTable(SqlCommandCreateTable*);
+  Info CreateIndex(SqlCommandCreateIndex*);
+  Info DeleteFrom(SqlCommandDeleteFrom*);
+  Info DropTable(SqlCommandDropTable*);
+  Info DropIndex(SqlCommandDropIndex*); 
+  Info InsertInto(SqlCommandInsertInto*);
+  Info SelectFrom(SqlCommandSelectFrom*);
 };
 
 #endif

@@ -24,17 +24,17 @@ void API::Switcher(SqlCommand* command){
   SqlCommandType command_type = command->command_type();
   switch(command_type){
     case kSqlInvalid: {Info info("Invalid Command, Please check your syntax."); info.PrintInfo(); break;}
-    case kSqlCreateTable: {Info info = CreateTable(command); info.PrintInfo(); break;}
-    case kSqlCreateIndex: {Info info = CreateIndex(command); info.PrintInfo(); break;}
-    case kSqlDeleteFrom: {Info info = DeleteFrom(command); info.PrintInfo(); break;}
-    case kSqlDropTable: {Info info = DropTable(command); info.PrintInfo(); break;}
-    case kSqlDropIndex: {Info info = DropIndex(command); info.PrintInfo(); break;}
-    case kSqlInsertInto: {Info info = InsertInto(command); info.PrintInfo(); break;}
-    case kSqlSelectFrom: {Info info = SelectFrom(command); break;}
+    case kSqlCreateTable: {Info info = CreateTable(dynamic_cast<SqlCommandCreateTable *>(command)); info.PrintInfo(); break;}
+    case kSqlCreateIndex: {Info info = CreateIndex(dynamic_cast<SqlCommandCreateIndex *>(command)); info.PrintInfo(); break;}
+    case kSqlDeleteFrom: {Info info = DeleteFrom(dynamic_cast<SqlCommandDeleteFrom *>(command)); info.PrintInfo(); break;}
+    case kSqlDropTable: {Info info = DropTable(dynamic_cast<SqlCommandDropTable *>(command)); info.PrintInfo(); break;}
+    case kSqlDropIndex: {Info info = DropIndex(dynamic_cast<SqlCommandDropIndex *>(command)); info.PrintInfo(); break;}
+    case kSqlInsertInto: {Info info = InsertInto(dynamic_cast<SqlCommandInsertInto *>(command)); info.PrintInfo(); break;}
+    case kSqlSelectFrom: {Info info = SelectFrom(dynamic_cast<SqlCommandSelectFrom *>(command)); break;}
   }
 }
 
-Info API::CreateTable(SqlCommand* command){
+Info API::CreateTable(SqlCommandCreateTable* command){
   CatalogManager catalog_manager;
   TableInfo table;
   std::string table_name = command->table_name();
@@ -45,7 +45,7 @@ Info API::CreateTable(SqlCommand* command){
   //判断表是否存在
   if(catalog_manager.HasTable(table_name)){
     std::string error_info;
-    error_info = "ERROR:Table \"" + table_name + "\" already exists.";
+    error_info = "Table \"" + table_name + "\" already exists.";
     return Info(error_info);
   }
   else{
@@ -61,19 +61,19 @@ Info API::CreateTable(SqlCommand* command){
       //判断类型是否有效
       if (it->second.first != "char" && it->second.first != "int" && it->second.first != "float"){
         std::string error_info;
-        error_info = "ERROR:The type \"" + it->second.first + "\" of attribute" + it->first + "is invalid.";
+        error_info = "The type \"" + it->second.first + "\" of attribute \"" + it->first + "\" is invalid.";
         return Info(error_info);
       }
       else{
         single_attribute_info.set_type(it->second.first);
 
         //判断char(n) n是否在1~255的范围内
-        if (0<it->second.second<256){
+        if (0<it->second.second && it->second.second<256){
           single_attribute_info.set_length(it->second.second);
         }
         else{
           std::string error_info;
-          error_info = "ERROR:The length of char of attribute " + it->first + " must in range of [1,256]";
+          error_info = "The length of char of attribute \"" + it->first + "\" must in range of [1,256].";
           return Info(error_info);
         }
       }
@@ -99,15 +99,15 @@ Info API::CreateTable(SqlCommand* command){
     table.set_attribute_number(attribute_count);
 
     if(catalog_manager.RegisterTable(table)){
-      return Info("Create table success.");
+      return Info();
     }
     else{
-      return Info("ERROR:Register table failed");
+      return Info("Register table failed.");
     }
   }
 }
 
-Info API::CreateIndex(SqlCommand* command){
+Info API::CreateIndex(SqlCommandCreateIndex* command){
   IndexManager index_manager;
   CatalogManager catalog_manager;
   std::string index_name = command->index_name();
@@ -116,75 +116,80 @@ Info API::CreateIndex(SqlCommand* command){
 
   if (catalog_manager.HasIndex(index_name)){
     std::string error_info;
-    error_info = "ERROR:Index \"" + index_name + "\" already exists.";
+    error_info = "Index \"" + index_name + "\" already exists.";
     return Info(error_info);
   }
   if (!catalog_manager.HasTable(table_name)){
     std::string error_info;
-    error_info = "ERROR:table \"" + table_name + "\" not exists.";
+    error_info = "table \"" + table_name + "\" not exists.";
     return Info(error_info);
   }
   else if(!catalog_manager.GetTableInfo(table_name).HasAttribute(attribute_name)){
     std::string error_info;
-    error_info = "ERROR:attribute \"" + attribute_name + "\" not exists.";
+    error_info = "attribute \"" + attribute_name + "\" not exists.";
     return Info(error_info);
   }
   else{
-    if(index_manager.CreateIndex(IndexInfo(index_name, table_name, attribute_name))){
-      return Info("Create index success.");
+    IndexInfo index_info(index_name, table_name, attribute_name);
+    if(index_manager.CreateIndex(index_info)){
+      if (!catalog_manager.RegisterIndex(index_info))
+      {
+        return Info("RegisterIndex failed.");
+      }
+      return Info();
     }
     else{
-      return Info("ERROR:Create index failed.");
+      return Info("Create index failed.");
     }
   }
 }
 
-Info API::DeleteFrom(SqlCommand* command){
+Info API::DeleteFrom(SqlCommandDeleteFrom* command){
 }
 
-Info API::DropTable(SqlCommand* command){
+Info API::DropTable(SqlCommandDropTable* command){
   CatalogManager catalog_manager;
   std::string table_name = command->table_name();
 
   if (!catalog_manager.HasTable(table_name)){
     std::string error_info;
-    error_info = "ERROR:Table \"" + table_name + "\" not exists.";
+    error_info = "Table \"" + table_name + "\" not exists.";
     return Info(error_info);
   }
   else{
     if (catalog_manager.DropTable(table_name)){
-      return Info("Drop table success.");
+      return Info();
     }
     else{
-      return Info("ERROR:Drop index Failed");
+      return Info("Drop table Failed");
     }
   }
 }
 
-Info API::DropIndex(SqlCommand* command){
+Info API::DropIndex(SqlCommandDropIndex* command){
   CatalogManager catalog_manager;
   std::string index_name = command->index_name();
 
   if (!catalog_manager.HasIndex(index_name)){
     std::string error_info;
-    error_info = "ERROR:Index \"" + index_name + "\" not exists.";
+    error_info = "Index \"" + index_name + "\" not exists.";
     return Info(error_info);
   }
   else{
     if (catalog_manager.DropIndex(index_name)){
-      return Info("Drop index success.");
+      return Info();
     }
     else{
-      return Info("ERROR:Drop index Failed");
+      return Info("Drop index Failed");
     }
   }
 
 }
 
-Info API::InsertInto(SqlCommand* command){
+Info API::InsertInto(SqlCommandInsertInto* command){
 
 }
 
-Info API::SelectFrom(SqlCommand* command){
+Info API::SelectFrom(SqlCommandSelectFrom* command){
 
 }

@@ -86,31 +86,31 @@ std::string Interpreter::CommandContentPreProcess(std::string& command_content){
 //@author: ryecao
 //@brief: 根据 command_type 选择相应的语句生成器
 SqlCommand* Interpreter::SelectSqlCommand(std::string& command_type, std::string& command_content){
-  SqlCommand* sql_command;
+  SqlCommand* sql_command = NULL;
   if (command_type == "create table"){
     SqlCommandCreateTable sql_command_create_table;
     sql_command_create_table = SqlCreateTable(command_content);
-    sql_command = &sql_command_create_table;
+    sql_command = new SqlCommandCreateTable(sql_command_create_table);
   }
   else if (command_type == "create index"){
     SqlCommandCreateIndex sql_command_create_index;
     sql_command_create_index = SqlCreateIndex(command_content);
-    sql_command = &sql_command_create_index;
+    sql_command = new SqlCommandCreateIndex(sql_command_create_index);
   }
   else if (command_type == "delete from"){
     SqlCommandDeleteFrom sql_command_delete_from;
     sql_command_delete_from = SqlDeleteFrom(command_content);
-    sql_command = &sql_command_delete_from;
+    sql_command = new SqlCommandDeleteFrom(sql_command_delete_from);
   }
   else if (command_type == "drop table"){
     SqlCommandDropTable sql_command_drop_table;
     sql_command_drop_table = SqlDropTable(command_content);
-    sql_command = &sql_command_drop_table;
+    sql_command = new SqlCommandDropTable(sql_command_drop_table);
   }
   else if (command_type == "drop index"){
     SqlCommandDropIndex sql_command_drop_index;
     sql_command_drop_index = SqlDropIndex(command_content);
-    sql_command = &sql_command_drop_index;
+    sql_command = new SqlCommandDropIndex(sql_command_drop_index);
   }
   else if (command_type == "execfile"){
     SqlExecfile(command_content);
@@ -118,7 +118,7 @@ SqlCommand* Interpreter::SelectSqlCommand(std::string& command_type, std::string
   else if (command_type == "insert into"){
     SqlCommandInsertInto sql_command_insert_into;
     sql_command_insert_into = SqlInsertInto(command_content);
-    sql_command = &sql_command_insert_into;
+    sql_command = new SqlCommandInsertInto(sql_command_insert_into);
   }
   else if (command_type == "quit" || command_type == "quit;"){
     SqlQuit(command_content);
@@ -126,7 +126,7 @@ SqlCommand* Interpreter::SelectSqlCommand(std::string& command_type, std::string
   else if (command_type == "select"){
     SqlCommandSelectFrom sql_command_select_from;
     sql_command_select_from = SqlSelectFrom(command_content);
-    sql_command = &sql_command_select_from; 
+    sql_command = new SqlCommandSelectFrom(sql_command_select_from); 
   }
 
   return sql_command;
@@ -156,13 +156,19 @@ SqlCommand* Interpreter::ReadInput(){
 
     if (is_in_sql_command == 0){
       is_command_type_valid = false;
-      return NULL;
+      SqlCommand* sc = NULL;
+      SqlCommandCreateTable sct;
+      sct.set_command_type(kSqlInvalid);
+      sc = new SqlCommandCreateTable(sct);
+      return sc;
     }
 
     is_command_type_valid = true;
   }
-  else if (first_word == "select" || first_word == "quit" || first_word == "quit;" || first_word == "execfile")
-  {
+  else if (first_word == "select" || first_word == "quit" || first_word == "quit;" || first_word == "execfile"){
+    if (first_word =="quit" || first_word =="quit;"){
+      std::exit(1);
+    }
     is_command_type_valid = true;
   }
 
@@ -178,11 +184,15 @@ SqlCommand* Interpreter::ReadInput(){
       }
       command_content = command_content + " " +temp_word;
     }
-    SqlCommand* sql_command_pointer;
+    SqlCommand* sql_command_pointer = NULL;
     sql_command_pointer = SelectSqlCommand(command_type, command_content);
     return sql_command_pointer;
   }
-  return NULL;
+  SqlCommand* sc = NULL;
+  SqlCommandCreateTable sct;
+  sct.set_command_type(kSqlInvalid);
+  sc = new SqlCommandCreateTable(sct);
+  return sc;
 }
 
 SqlCommand* Interpreter::ReadInput(std::stringstream& read_command_stream){
@@ -206,12 +216,19 @@ SqlCommand* Interpreter::ReadInput(std::stringstream& read_command_stream){
 
     if (is_in_sql_command == 0){
       is_command_type_valid = false;
-      return NULL;
+      SqlCommand* sc = NULL;
+      SqlCommandCreateTable sct;
+      sct.set_command_type(kSqlInvalid);
+      sc = new SqlCommandCreateTable(sct);
+      return sc;
     }
     is_command_type_valid = true;
   }
   else if (first_word == "select" || first_word == "quit" || first_word == "quit;" || first_word == "execfile")
   {
+    if (first_word =="quit" || first_word =="quit;"){
+      std::exit(1);
+    }    
     is_command_type_valid = true;
   }
 
@@ -231,7 +248,12 @@ SqlCommand* Interpreter::ReadInput(std::stringstream& read_command_stream){
     sql_command_pointer = SelectSqlCommand(command_type, command_content);
     return sql_command_pointer;
   }
-  return NULL;
+  is_command_type_valid = false;
+  SqlCommand* sc = NULL;
+  SqlCommandCreateTable sct;
+  sct.set_command_type(kSqlInvalid);
+  sc = new SqlCommandCreateTable(sct);
+  return sc;
 }
 
 
@@ -253,15 +275,25 @@ SqlCommandCreateTable Interpreter::SqlCreateTable(std::string& command){
     return create_table_command;
   }
 
+  std::vector<std::string> column_names_in;
   std::string column_name,type,char_length;
   std::string first_word, second_word;
   while(word!=";"){
     command_stream >> first_word;
     command_stream >> second_word;
-
     if (first_word !="primary" && second_word!="key"){
       column_name = first_word;
       type = second_word;
+
+      
+      for (auto it:column_names_in){
+        if (it == column_name){
+          create_table_command.set_command_type(kSqlInvalid);
+          return create_table_command;
+        }
+      }
+      column_names_in.push_back(column_name);
+
       create_table_command.set_attribute_name_ordered(column_name);
 
       if (type != "char"){
@@ -385,7 +417,7 @@ SqlCommandCreateIndex Interpreter::SqlCreateIndex(std::string& command){
 
 inline bool is_number(const std::string & s)
 {
-   if(s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false ;
+   if(s.empty() || ((!std::isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false ;
 
    char * p ;
    strtol(s.c_str(), &p, 10) ;
@@ -600,7 +632,6 @@ SqlCommandInsertInto Interpreter::SqlInsertInto(std::string& command){
 
   command_stream >> word;
   if(word != ";"){
-    cout<<"fuck "<<word<<endl;
     insert_into_command.set_command_type(kSqlInvalid);
     return insert_into_command;
   }
@@ -689,7 +720,9 @@ SqlCommandSelectFrom Interpreter::SqlSelectFrom(std::string& command){
       }
       clause.kCondition = word;
 
-      command_stream >> word;
+      if(!number_flag){
+        command_stream >> word;
+      }
       if (word != "'" && !number_flag){
         select_from_command.set_command_type(kSqlInvalid);
         return select_from_command;

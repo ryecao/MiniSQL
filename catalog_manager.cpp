@@ -82,7 +82,7 @@ void CatalogManager::WriteTableInfo(const TableInfo& table){
 bool CatalogManager::DropTable(const std::string &table_name){
   std::string file_name = table_name + "_t.cata";
   const char* file_name_cc = file_name.c_str();
-  if (std::remove(file_name_cc)){
+  if (std::remove(file_name_cc) == 0){
     return true;
   }
   else{
@@ -109,7 +109,7 @@ TableInfo CatalogManager::GetTableInfo(const std::string &table_name){
   std::string line;
   while(std::getline(file_table_in, line)){
     index_names.clear();
-    if (flag == 0){qu
+    if (flag == 0){
       std::stringstream line_stream(line);
       line_stream >> table_name_in_file >> attribute_number;
       table.set_table_name(table_name_in_file);
@@ -149,7 +149,7 @@ bool CatalogManager::RegisterIndex(const IndexInfo& index){
 bool CatalogManager::DropIndex(const std::string &index_name){
   std::string file_name = index_name + "_i.cata";
   const char *file_name_cc = file_name.c_str();
-  if (std::remove(file_name_cc)){
+  if (std::remove(file_name_cc) == 0){
     return true;
   }
   else{
