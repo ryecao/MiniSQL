@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <set>
+#include <map>
 
 class RocordManager{
 public:
