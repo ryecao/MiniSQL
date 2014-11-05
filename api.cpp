@@ -97,7 +97,7 @@ Info API::CreateTable(SqlCommandCreateTable* command){
       table.add_attribute(single_attribute_info);
     }
     table.set_attribute_number(attribute_count);
-
+    table.set_attribute_names_ordered(command->attribute_names_ordered());
     if(catalog_manager.RegisterTable(table)){
       return Info();
     }

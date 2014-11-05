@@ -59,17 +59,30 @@ bool CatalogManager::RegisterTable(const TableInfo &table){
 
   file_table_out << table_name << " " << table.attribute_number() <<std::endl;
 
+  auto attribute_names_ordered = table.attribute_names_ordered();
   auto attributes = table.all_attributes();
-  for (auto it = attributes.begin(); it != attributes.end(); ++it){
-    file_table_out << it->first << " " << it->second.type() << " " << it->second.length() <<" "
-                   << it->second.is_unique() << " " << it->second.is_primary_key() << " ";
-    std::vector<std::string> index_names = it->second.index_names();
+
+  for (auto it: attribute_names_ordered){
+    file_table_out << it << " " << attributes[it].type() << " " << attributes[it].length() <<" "
+                   << attributes[it].is_unique() << " " << attributes[it].is_primary_key() << " ";
+    std::vector<std::string> index_names = attributes[it].index_names();
 
     for (auto &iter : index_names){
       file_table_out<< iter <<" ";
     }
     file_table_out<<std::endl;
   }
+
+  // for (auto it = attributes.begin(); it != attributes.end(); ++it){
+  //   file_table_out << it->first << " " << it->second.type() << " " << it->second.length() <<" "
+  //                  << it->second.is_unique() << " " << it->second.is_primary_key() << " ";
+  //   std::vector<std::string> index_names = it->second.index_names();
+
+  //   for (auto &iter : index_names){
+  //     file_table_out<< iter <<" ";
+  //   }
+  //   file_table_out<<std::endl;
+  // }
 
   file_table_out.close();
   return true;
@@ -104,7 +117,8 @@ TableInfo CatalogManager::GetTableInfo(const std::string &table_name){
   std::string attribute_name;
   std::string index_name;
   std::vector<std::string> index_names;
-
+  std::vector<std::string> attribute_names_ordered;
+  
   int flag = 0;
   std::string line;
   while(std::getline(file_table_in, line)){
@@ -119,14 +133,15 @@ TableInfo CatalogManager::GetTableInfo(const std::string &table_name){
     else{
       std::stringstream line_stream(line);
       line_stream >> attribute_name >> type >> length >> is_unique >> is_primary_key;
+      attribute_names_ordered.push_back(attribute_name);
       while(line_stream >> index_name){
         index_names.push_back(index_name);
       }
-
       table.add_attribute(AttributeInfo(attribute_name, type, length, index_names, is_unique, is_primary_key));
     }
   }
 
+  table.set_attribute_names_ordered(attribute_names_ordered);
   return table;
 }
 

@@ -303,7 +303,7 @@ SqlCommandCreateTable Interpreter::SqlCreateTable(std::string& command){
       }
       column_names_in.push_back(column_name);
 
-      create_table_command.set_attribute_name_ordered(column_name);
+      create_table_command.set_attribute_names_ordered(column_name);
 
       if (type != "char"){
         create_table_command.set_attribute(column_name,type,"1");

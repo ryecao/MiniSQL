@@ -50,6 +50,7 @@ public:
             :table_name_(table_name), attribute_info_(attribute_info){attribute_number_ = 0;};
   int attribute_number() const{ return attribute_number_; }; //get the number of table's attributes
   std::string table_name() const{ return table_name_; }; //get the table's name
+  std::vector<std::string> attribute_names_ordered() const {return attribute_names_ordered_;};
   AttributeInfo attribute(const std::string& attribute_name){ return attribute_info_[attribute_name]; }; //get the attribute's information    
   bool HasAttribute(const std::string& attribute_name) const{ 
     auto search = attribute_info_.find(attribute_name);  
@@ -69,10 +70,11 @@ public:
   };
   void set_table_name(const std::string& table_name){ table_name_=table_name; }; //set the table's name
   void set_attribute_number(const int attribute_number){ attribute_number_ = attribute_number; }; //set the table's name
-
+  void set_attribute_names_ordered(const std::vector<std::string>& attribute_names_ordered){attribute_names_ordered_=attribute_names_ordered;};
 private:
   std::string table_name_;
   int attribute_number_;
+  std::vector<std::string> attribute_names_ordered_;
   std::map<std::string,AttributeInfo> attribute_info_;
 };
 

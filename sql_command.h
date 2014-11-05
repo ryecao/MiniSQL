@@ -61,7 +61,7 @@ public:
   virtual std::string primary_key() const = 0;
   virtual std::vector<std::string> unique() const = 0;
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const = 0;
-  virtual std::vector<std::string> attribute_name_ordered() const = 0;
+  virtual std::vector<std::string> attribute_names_ordered() const = 0;
 protected:
   SqlCommandType command_type_;
   std::string database_name_;
@@ -77,12 +77,12 @@ public:
     SqlCommand::set_command_type(ct.command_type());
     table_name_=ct.table_name();primary_key_=ct.primary_key();
     unique_=ct.unique();attribute_=ct.attribute();
-    attribute_name_ordered_=ct.attribute_name_ordered();
+    attribute_names_ordered_=ct.attribute_names_ordered();
   };
   void set_table_name(std::string& table_name) { table_name_ = table_name; };
   void set_primary_key(std::string& key_name) { primary_key_ = key_name; };
   void set_unique(std::string& key_name) { unique_.push_back(key_name); };
-  void set_attribute_name_ordered(std::string& attribute_name){attribute_name_ordered_.push_back(attribute_name);};
+  void set_attribute_names_ordered(std::string& attribute_name){attribute_names_ordered_.push_back(attribute_name);};
   void set_attribute(std::string& column_name, std::string type, std::string char_length)
   {
     int char_length_int = std::stoi(char_length);
@@ -96,7 +96,7 @@ public:
   virtual std::string primary_key() const { return  primary_key_; };
   virtual std::vector<std::string> unique() const { return unique_; };
   virtual std::map<std::string, std::pair<std::string,int> > attribute() const { return attribute_; };
-  virtual std::vector<std::string> attribute_name_ordered() const {return attribute_name_ordered_;};
+  virtual std::vector<std::string> attribute_names_ordered() const {return attribute_names_ordered_;};
 private:
   std::string table_name_;
   //primary key
@@ -105,7 +105,7 @@ private:
   std::vector<std::string> unique_;
   //<列名，<类型,长度>>
   std::map<std::string, std::pair<std::string,int> > attribute_;
-  std::vector<std::string> attribute_name_ordered_;
+  std::vector<std::string> attribute_names_ordered_;
 };
 
 //@author: ryecao
@@ -127,7 +127,7 @@ public:
   virtual std::string primary_key() const{};
   virtual std::vector<std::string> unique() const{};
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
-  virtual std::vector<std::string> attribute_name_ordered() const{};
+  virtual std::vector<std::string> attribute_names_ordered() const{};
 
   virtual std::string index_name() const { return index_name_; };
   virtual std::string table_name() const { return table_name_; };
@@ -159,7 +159,7 @@ public:
   virtual std::string primary_key() const{};
   virtual std::vector<std::string> unique() const{};
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
-  virtual std::vector<std::string> attribute_name_ordered() const{};
+  virtual std::vector<std::string> attribute_names_ordered() const{};
 
   bool delete_all_records() const{ return delete_all_records_; };
   virtual std::string table_name() const { return table_name_; };
@@ -188,7 +188,7 @@ public:
   virtual std::string primary_key() const{};
   virtual std::vector<std::string> unique() const{};
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
-  virtual std::vector<std::string> attribute_name_ordered() const{};
+  virtual std::vector<std::string> attribute_names_ordered() const{};
 
   virtual std::string table_name() const { return table_name_; };
 private:
@@ -213,7 +213,7 @@ public:
   virtual std::string primary_key() const{};
   virtual std::vector<std::string> unique() const{};
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
-  virtual std::vector<std::string> attribute_name_ordered() const{};
+  virtual std::vector<std::string> attribute_names_ordered() const{};
 
   virtual std::string index_name() const { return index_name_; };
 private:
@@ -233,7 +233,7 @@ public:
   virtual std::string primary_key() const{};
   virtual std::vector<std::string> unique() const{};
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
-  virtual std::vector<std::string> attribute_name_ordered() const{};
+  virtual std::vector<std::string> attribute_names_ordered() const{};
   virtual std::string index_name() const {};
 
 };
@@ -257,7 +257,7 @@ public:
   virtual std::string primary_key() const{};
   virtual std::vector<std::string> unique() const{};
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
-  virtual std::vector<std::string> attribute_name_ordered() const{};
+  virtual std::vector<std::string> attribute_names_ordered() const{};
 
   virtual std::string table_name() const { return table_name_; };
   std::vector<std::string> values() const { return values_; };
@@ -293,7 +293,7 @@ public:
   virtual std::string primary_key() const{};
   virtual std::vector<std::string> unique() const{};
   virtual std::map<std::string, std::pair<std::string,int>> attribute() const{};
-  virtual std::vector<std::string> attribute_name_ordered() const{};
+  virtual std::vector<std::string> attribute_names_ordered() const{};
 
   virtual bool select_all_records() const{ return select_all_records_; };
   virtual bool select_all_columns() const { return select_all_columns_; };  
