@@ -1,5 +1,5 @@
-#ifndef RECORD_MANAGER_
-#define RECORD_MANAGER_
+#ifndef RECORD_MANAGER_H
+#define RECORD_MANAGER_H
 
 #include "table_info.h"
 #include "attribute_type.h"
@@ -7,7 +7,6 @@
 #include <vector>
 #include <string>
 #include <set>
-#include <map>
 
 class RocordManager{
 public:
@@ -20,14 +19,13 @@ public:
 	std::set<int> rmGetAllOffsets(const std::string &fileName);
 	void rmClear(const std::string fileName) ;
 private:
-	bool FitterTest(const std::vector<WhereClause> &constraint, const std::vector <AttrType> &data); // Fitter
-	std::vector <AttrType> binaryToEntry(unsigned char *c,const TableInfo &datatable);
 	void loadBlockStatus(const std::string &fileName);
-	bool FitinTable(const std::vector<AttrType> &entry, const TableInfo &datatable);
-	static int FetchInt(const unsigned char *loc);
-	static float FetchFloat(const unsigned char *loc);r
-	static std::string FetchString(const unsigned char *loc,int len);
-	std::map <std::string,std::map <int,int> >  blockStatus;
+	bool FitinTable(const std::vector <AttrType> &entry, const TableInfo &datatable);
+	void entryToBinary(const std::vector <AttrType> &entry, unsigned char * c,const TableInfo &datatable);
+	std::vector <AttrType> binaryToEntry(unsigned char *c,const TableInfo &datatable);
+	bool FitterTest(const std::vector<WhereClause> &constraint, const std::vector <AttrType> &data); 
+	
+
 };
 
 #endif
