@@ -70,7 +70,7 @@ namespace B_Plus_Tree {
         vector<int> getAllGreaterOrEqual(const AttrType &V);  //find all record that the key is >=V
         set<int> getAllLessGreaterOrEqual(const AttrType &V);
     private:
-        string fname;   // {database}_{tablename}_{indename}.index
+        string fname;   // {database}_{tablename}_{indexname}.index
         IndexTypeInfo tinfo;
         Node root_node;
         int fanout;

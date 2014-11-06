@@ -29,6 +29,8 @@ public:
       type_ = 2;
     }    
   }; 
+  void  add_index(const std::string& index){index_names_.push_back(index);};
+  void  remove_index(const std::string& index){index_names_.erase(std::remove(index_names_.begin(), index_names_.end(), index), index_names_.end());};
   void  set_length(const int length){ length_ = length; }; 
   void  set_index_names(const std::vector<std::string> index_names){ index_names_ = index_names; };
   void  set_is_unique(const bool is_unique){ is_unique_ = is_unique; };
@@ -50,6 +52,20 @@ public:
             :table_name_(table_name), attribute_info_(attribute_info){attribute_number_ = 0;};
   int attribute_number() const{ return attribute_number_; }; //get the number of table's attributes
   std::string table_name() const{ return table_name_; }; //get the table's name
+  std::vector<std::string> index_names(){
+    std::vector<std::string> res;
+    for (auto it : attributes_info_){
+      for (auto i : it->second.index_names()){
+        res.push_back(i);
+      }
+    }
+    return res;
+  };
+  int attribute_index(const string & attribute_name){
+    auto i = std::find(attribute_names_ordered_.begin(), attribute_names_ordered_.end(),attribute_name);
+    int position= std::distance(attribute_names_ordered_.begin(),i);
+    return position;
+  };
   std::vector<std::string> attribute_names_ordered() const {return attribute_names_ordered_;};
   AttributeInfo attribute(const std::string& attribute_name){ return attribute_info_[attribute_name]; }; //get the attribute's information    
   bool HasAttribute(const std::string& attribute_name) const{ 
@@ -60,7 +76,7 @@ public:
     else{
       return false;
     }
-  }
+  };
   std::map<std::string,AttributeInfo> all_attributes() const{ return attribute_info_; };
 
   void add_attribute(AttributeInfo info){
