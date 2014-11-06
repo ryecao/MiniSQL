@@ -89,6 +89,11 @@ public:
     auto pointer_to_an_attribute_pair = std::make_pair(column_name, std::make_pair(type, char_length_int));
     attribute_.insert(pointer_to_an_attribute_pair);
   }
+  void set_attribute(std::string& column_name, std::string type, int char_length)
+  {
+    auto pointer_to_an_attribute_pair = std::make_pair(column_name, std::make_pair(type, char_length));
+    attribute_.insert(pointer_to_an_attribute_pair);
+  }
   virtual std::string index_name() const{};
   virtual std::string column_name() const{};
   
@@ -201,6 +206,11 @@ class SqlCommandDropIndex : public SqlCommand
 {
 public:
   SqlCommandDropIndex(){};
+  SqlCommandDropIndex(const std::string& index_name){
+    SqlCommand::set_command_type(kSqlDropIndex);
+    index_name_ = index_name;
+  };
+
   SqlCommandDropIndex(const SqlCommandDropIndex& di){
     SqlCommand::set_command_type(di.command_type());
     index_name_=di.index_name();

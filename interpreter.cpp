@@ -306,7 +306,12 @@ SqlCommandCreateTable Interpreter::SqlCreateTable(std::string& command){
       create_table_command.set_attribute_names_ordered(column_name);
 
       if (type != "char"){
-        create_table_command.set_attribute(column_name,type,"1");
+        if(type == "int"){
+          create_table_command.set_attribute(column_name,type,sizeof(int));
+        }
+        else if(type == "float"){
+          create_table_command.set_attribute(column_name,type,sizeof(float));
+        }
       }
       else{
         command_stream >> word;

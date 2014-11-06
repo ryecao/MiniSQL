@@ -7,7 +7,7 @@
 
 class IndexManager {
 public:
-    bool CreateIndex(const IndexInfo &index);
+    bool CreateIndex(const IndexInfo &index){return true;};
     bool AddRecord(const std::string &table_name, const AttrType &K, int P);
     bool DeleteRecord(const std::string &table_name, const AttrType &K, int P);    
 
