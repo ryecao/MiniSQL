@@ -4,6 +4,8 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <algorithm>
+#include <iterator>
 
 class AttributeInfo {
 public:
@@ -54,14 +56,14 @@ public:
   std::string table_name() const{ return table_name_; }; //get the table's name
   std::vector<std::string> index_names(){
     std::vector<std::string> res;
-    for (auto it : attributes_info_){
-      for (auto i : it->second.index_names()){
+    for (auto it : attribute_info_){
+      for (auto i : it.second.index_names()){
         res.push_back(i);
       }
     }
     return res;
   };
-  int attribute_index(const string & attribute_name){
+  int attribute_index(const std::string & attribute_name){
     auto i = std::find(attribute_names_ordered_.begin(), attribute_names_ordered_.end(),attribute_name);
     int position= std::distance(attribute_names_ordered_.begin(),i);
     return position;

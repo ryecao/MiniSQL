@@ -45,14 +45,14 @@ public:
 
   bool DeleteAllRecords(const TableInfo& table);
 private:
-  bool FitterTest(const std::vector <AttrType> &data); // Fitter
-  std::vector <AttrType> binaryToEntry(unsigned char *c,const TableInfo &table);
-  void loadBlockStatus(const std::string &fileName);
-  bool FitinTable(const std::vector<AttrType> &entry, const TableInfo &table);
-  static int FetchInt(const unsigned char *loc);
-  static float FetchFloat(const unsigned char *loc);
-  static std::string FetchString(const unsigned char *loc,int len);
-  std::map <std::string,std::map <int,int> >  blockStatus;
+  // bool FitterTest(const std::vector <AttrType> &data); // Fitter
+  // std::vector <AttrType> binaryToEntry(unsigned char *c,const TableInfo &table);
+  // void loadBlockStatus(const std::string &fileName);
+  // bool FitinTable(const std::vector<AttrType> &entry, const TableInfo &table);
+  // static int FetchInt(const unsigned char *loc);
+  // static float FetchFloat(const unsigned char *loc);
+  // static std::string FetchString(const unsigned char *loc,int len);
+  // std::map <std::string,std::map <int,int> >  blockStatus;
 };
 
 #endif

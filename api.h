@@ -24,6 +24,7 @@ class Info
 public:
   Info(){is_succeed_= true;};
   Info(std::string error_info){is_succeed_= false;error_info_ = error_info;};
+  bool is_succeed(){return is_succeed_;};
   void PrintInfo(){if (is_succeed_) std::cout<<"Success"<<std::endl; else std::cout<<"Error: "<<error_info_<<std::endl;}
 private:
   bool is_succeed_;
