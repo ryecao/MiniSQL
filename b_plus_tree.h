@@ -58,7 +58,7 @@ namespace B_Plus_Tree {
         int lower_bound(const AttrType &V);                       //return the first block_offset(refer to the table data file, not the index file) that >= V   if not find return -1
         bool contains(const AttrType &V);                         //test if contains index V
         void insert(const AttrType &V,const int P);    //insert the pair(V,P)  V->index P->the block of the record                    
-
+        int find(const AttrType &V);                   //return the offset of attribute V, if not find return -1
         //the following functions are not finished yet, the interface might be modified        
         void delete(const AttrType &V);             //delete key V        
         vector<int> getAllLess(const AttrType &V);  //find all record that the key is <V
