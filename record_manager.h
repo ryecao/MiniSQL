@@ -6,6 +6,7 @@
 #include <set>
 #include "table_info.h"
 #include "sql_command.h"
+#include "attribute_type.h"
 
 class RecordManager{
 public:
@@ -27,14 +28,12 @@ public:
   //@brief: 在结果中筛选出符合某条件的记录
   //@params: <block offset，record position in block>, table info, 一条 where 从句;
   //@return: vector<block_offset_in_file, tuple_position_in_block>.
-  std::vector<std::pair<int,int>> RecordsFilter(std::vector<std::pair<int,int>>,const TableInfo& table,WhereClause where_clause);
+  std::vector<std::pair<int,int>> RecordsFilter(std::vector<std::pair<int,int>> record,const TableInfo& table,WhereClause where_clause);
 
   //@brief: 根据 block 偏移量和 tuple 在 block 中的位置删除某条记录.
   //@params: vector<block_offset_in_file, tuple_position_in_block>, table info
   bool DeleteRecords(std::vector<std::pair<int,int>> offsets, const TableInfo& table); 
   
-  //@brief: 根据 block 偏移量和 tuple 在 block 中的位置删除某条记录.
-  //@params: vector<block_offset_in_file, tuple_position_in_block>, table info
   //@return: 包含符合条件的记录的vector.
   //!!! 请务必保持传入的vector的每个 <块号，块内位置>与返回的vector 中的每个记录中的位置一一对应!!!
   //!!! 也就是 vector_of_results.at(i) 对应 vector_of_pairs.at(i) !!!
@@ -45,14 +44,11 @@ public:
 
   bool DeleteAllRecords(const TableInfo& table);
 private:
-  // bool FitterTest(const std::vector <AttrType> &data); // Fitter
-  // std::vector <AttrType> binaryToEntry(unsigned char *c,const TableInfo &table);
-  // void loadBlockStatus(const std::string &fileName);
-  // bool FitinTable(const std::vector<AttrType> &entry, const TableInfo &table);
-  // static int FetchInt(const unsigned char *loc);
-  // static float FetchFloat(const unsigned char *loc);
-  // static std::string FetchString(const unsigned char *loc,int len);
-  // std::map <std::string,std::map <int,int> >  blockStatus;
+  bool FitterTest(const std::vector <AttrType> &data, WhereClause where_clause,const TableInfo &table); 
+  std::vector <AttrType> binaryToEntry(unsigned char *c,const TableInfo &table);
+  void entryToBinary(const std::vector<AttrType> &entry, unsigned char * c,const TableInfo &table);
+  void loadBlockStatus(const std::string &filename);
+  bool FitinTable(const std::vector<AttrType> &entry, const TableInfo &table);
 };
 
 #endif
