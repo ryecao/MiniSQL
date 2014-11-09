@@ -21,7 +21,9 @@ public:
     void WriteBlock(const Block &);               //save the block's data
     void FreeBlock(const Block &);                //delete a block
     void ClearFile(const std::string &fname);   //delete all block in file fname
-
+    void PinBlock(const Block &);                   
+    void ReleasePinBlock(const Block &);
+    
 private:
     //depende on implementation
     std::list<Block> pool;
