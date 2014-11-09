@@ -60,15 +60,11 @@ namespace B_Plus_Tree {
         void insert(const AttrType &V,const int P);    //insert the pair(V,P)  V->index P->the block of the record                    
         int find(const AttrType &V);                   //return the offset of attribute V, if not find return -1
         //the following functions are not finished yet, the interface might be modified        
-        void delete(const AttrType &V);             //delete key V        
-        vector<int> getAllLess(const AttrType &V);  //find all record that the key is <V
-        set<int> getAllLess(const AttrType &V);
-        vector<int> getAllLessOrEqual(const AttrType &V);  //find all record that the key is <=V
-        set<int> getAllLessOrEqual(const AttrType &V);
-        vector<int> getAllGreater(const AttrType &V);  //find all record that the key is >V
-        set<int> getAllLessGreater(const AttrType &V);
-        vector<int> getAllGreaterOrEqual(const AttrType &V);  //find all record that the key is >=V
-        set<int> getAllLessGreaterOrEqual(const AttrType &V);
+        bool erase(AttrType &V)             //delete key V        
+        vector<int> getAllLess(const AttrType &V);  //find all record that the key is <V        
+        vector<int> getAllLessOrEqual(const AttrType &V);  //find all record that the key is <=V    
+        vector<int> getAllGreater(const AttrType &V);  //find all record that the key is >V        
+        vector<int> getAllGreaterOrEqual(const AttrType &V);  //find all record that the key is >=V        
     private:
         string fname;   // {database}_{tablename}_{indexname}.index
         IndexTypeInfo tinfo;
