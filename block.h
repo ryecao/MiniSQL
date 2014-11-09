@@ -1,6 +1,8 @@
 #ifndef BLOCK_H_
 #define BLOCK_H_ 
 
+const int BLOCK_SIZE = 4*1024;
+
 class Block {
 public:    
     Block():    pos(0)  {}    

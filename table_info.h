@@ -12,12 +12,12 @@ public:
   AttributeInfo(){};
   AttributeInfo(const std::string& name, int type, int length, const std::vector<std::string>& index_names, bool is_unique, bool is_primary_key)
                 :name_(name), type_(type), length_(length), index_names_(index_names), is_unique_(is_unique), is_primary_key_(is_primary_key){};    
-  std::string name(){ return name_; }; //get the attribute's name
-  int type(){ return type_; }; //return the attribute's type
-  int length(){ return length_; }; //return the length of the attribute
-  std::vector<std::string> index_names(){ return index_names_; }; //return the index names defined for this attribute
-  bool is_unique(){ return is_unique_; }; //return true if the attribute is unique
-  bool is_primary_key(){ return is_primary_key_; }; //return true if the attribute is a primary key
+  std::string name() const{ return name_; }; //get the attribute's name
+  int type() const{ return type_; }; //return the attribute's type
+  int length() const{ return length_; }; //return the length of the attribute
+  std::vector<std::string> index_names() const{ return index_names_; }; //return the index names defined for this attribute
+  bool is_unique() const{ return is_unique_; }; //return true if the attribute is unique
+  bool is_primary_key() const { return is_primary_key_; }; //return true if the attribute is a primary key
     
   void  set_name(const std::string& name){ name_ = name;}; 
   void  set_type(const std::string& type){
@@ -69,7 +69,7 @@ public:
     return position;
   };
   std::vector<std::string> attribute_names_ordered() const {return attribute_names_ordered_;};
-  AttributeInfo attribute(const std::string& attribute_name){ return attribute_info_[attribute_name]; }; //get the attribute's information    
+  AttributeInfo attribute(const std::string& attribute_name) const { return attribute_info_[attribute_name]; }; //get the attribute's information    
   bool HasAttribute(const std::string& attribute_name) const{ 
     auto search = attribute_info_.find(attribute_name);  
     if (search != attribute_info_.end()){

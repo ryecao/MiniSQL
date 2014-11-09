@@ -3,7 +3,27 @@
 
 #include <vector>
 #include <string>
+#include <stack>
 #include "attribute_type.h"
+#include "block.h"
+
+class IndexTypeInfo {
+public:
+    IndexTypeInfo(){};
+    IndexTypeInfo(int is, int it, int ss):index_size(is),index_type(it),string_size(ss){};
+    int getIndexSize()  {return index_size;};
+    int getIndexType()  {return index_type;};
+    int getStringSize() {return string_size;};
+
+    void set_index_size(const int i)  {index_size = i;};
+    void set_index_type(const int i)  {index_type = i;};
+    void set_string_size(const int i) {string_size = i;};
+
+private:
+    int index_size;
+    int index_type;
+    int string_size;
+};
 
 namespace B_Plus_Tree {    
     class Node {
@@ -50,27 +70,25 @@ namespace B_Plus_Tree {
         std::vector<int> P;
         std::vector<AttrType> K;
     };
+
     class BPTree {
     public:
         BPTree()    {}
-        BPTree(const string &fname, const IndexTypeInfo &_tinfo); //Create a bptree by fname(fname, format is described below)
-        BPTree(const string &fname);                              //load a bptree from file 
+        BPTree(const std::string &fname, const IndexTypeInfo &_tinfo); //Create a bptree by fname(fname, format is described below)
+        BPTree(const std::string &fname);                              //load a bptree from file 
         int lower_bound(const AttrType &V);                       //return the first block_offset(refer to the table data file, not the index file) that >= V   if not find return -1
         bool contains(const AttrType &V);                         //test if contains index V
         void insert(const AttrType &V,const int P);    //insert the pair(V,P)  V->index P->the block of the record                    
-
+        void deleteAll();
+        int find(const AttrType &V);                   //return the offset of attribute V, if not find return -1
         //the following functions are not finished yet, the interface might be modified        
-        void delete(const AttrType &V);             //delete key V        
-        vector<int> getAllLess(const AttrType &V);  //find all record that the key is <V
-        set<int> getAllLess(const AttrType &V);
-        vector<int> getAllLessOrEqual(const AttrType &V);  //find all record that the key is <=V
-        set<int> getAllLessOrEqual(const AttrType &V);
-        vector<int> getAllGreater(const AttrType &V);  //find all record that the key is >V
-        set<int> getAllLessGreater(const AttrType &V);
-        vector<int> getAllGreaterOrEqual(const AttrType &V);  //find all record that the key is >=V
-        set<int> getAllLessGreaterOrEqual(const AttrType &V);
+        void erase(const AttrType &V);             //delete key V        
+        std::vector<int> getAllLess(const AttrType &V);  //find all record that the key is <V
+        std::vector<int> getAllLessOrEqual(const AttrType &V);  //find all record that the key is <=V
+        std::vector<int> getAllGreater(const AttrType &V);  //find all record that the key is >V
+        std::vector<int> getAllGreaterOrEqual(const AttrType &V);  //find all record that the key is >=V
     private:
-        string fname;   // {database}_{tablename}_{indexname}.index
+        std::string fname;   // {database}_{tablename}_{indexname}.index
         IndexTypeInfo tinfo;
         Node root_node;
         int fanout;

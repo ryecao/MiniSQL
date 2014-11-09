@@ -89,7 +89,8 @@ Info API::CreateTable(SqlCommandCreateTable* command){
       //判断是否是 primary_key
       if(it->first == primary_key){
         single_attribute_info.set_is_primary_key(true);
-        index_manager.CreateIndex(IndexInfo("#pri_" + table_name + "_" + it->first,table_name,it->first));
+        index_manager.CreateIndex(it->second.first,it->second.second,IndexInfo("#pri_" + table_name +"_"+it->first,table_name,it->first));
+        catalog_manager.RegisterIndex(IndexInfo("#pri_" + table_name +"_"+it->first,table_name,it->first));
       }
       else{
         single_attribute_info.set_is_primary_key(false);
@@ -143,7 +144,7 @@ Info API::CreateIndex(SqlCommandCreateIndex* command){
   else{
     IndexInfo index_info(index_name, table_name, attribute_name);
     //create index in index manager
-    if(index_manager.CreateIndex(index_info)){
+    if(index_manager.CreateIndex(table.attribute(attribute_name).type(),table.attribute(attribute_name).length(), index_info)){
       if (!catalog_manager.RegisterIndex(index_info))
       {
         return Info("Register Index failed.");
@@ -254,7 +255,7 @@ Info API::DeleteFrom(SqlCommandDeleteFrom* command){
       for (auto it : records){
         for (auto i : index_names){
           IndexInfo index_info = catalog_manager.GetIndexInfo(i);
-          if(!index_manager.DeleteRecord(index_info, it.at(table.attribute_index(i)), results.at(pair_index).first)){
+          if(!index_manager.DeleteRecord(table, index_info, it.at(table.attribute_index(i)), results.at(pair_index).first)){
             return Info("Delete record in index \"" + index_info.name() + "on attribute \"" + index_info.attribute_name() 
                         +"\" of table \"" + index_info.table_name() + "\"failed.");
           }
@@ -350,7 +351,7 @@ Info API::InsertInto(SqlCommandInsertInto* command){
 
   for (auto it : index_names){
     IndexInfo index_info = catalog_manager.GetIndexInfo(it);
-    if(!index_manager.AddRecord(index_info,values.at(table.attribute_index(index_info.attribute_name())),offset)){
+    if(!index_manager.AddRecord(table,index_info,values.at(table.attribute_index(index_info.attribute_name())),offset)){
       return Info("Update index failed.");
     }
   }

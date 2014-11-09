@@ -15,33 +15,7 @@ using namespace std;
 #endif
 using std::string;
 const int BLOCK_SIZE=4*1024;
-class IndexTypeInfo {
-public:
-    int getIndexSize()  {return index_size;}
-    int getIndexType()  {return index_type;}
-    int getStringSize() {return string_size;}
-private:
-    int index_size;
-    int index_type;
-    int string_size;
-};
-class Block {
-public:    
-    Block():    pos(0)  {}
-    Block(const Block &);
-    bool operator=(const Block &);    
-    int getpos() const;
 
-    int pos;
-    unsigned char data[BLOCK_SIZE];
-    string fname;    
-};
-struct BufferManage {    
-    Block allocateNewBlock(string fname);   //allocate a new block in file '$fname'
-    Block getBlock(string fname, int pos);  //return the block in file '${fname}' start at ${pos}
-    void writeBlock(Block &);
-    void freeBlock(Block &);
-}BM;
 namespace B_Plus_Tree {
     template<class T,class S>
     void readVector(std::istringstream &ss,int sz,std::vector<S> &p) {
