@@ -88,6 +88,7 @@ private:
         return fname+".freeinfo";
     }    
 };
+unsigned char FreeBlockManager::null[BLOCK_SIZE];
 
 Block BufferManager::AllocateNewBlock(std::string fname) {
     if(fm.HasFreeBlock(fname)) {        
@@ -160,4 +161,27 @@ void BufferManager::Flush() {
     }
     fm.Flush();
 }
+void BufferManager::PinBlock(const Block &b) {
+    int c=0,f=0;
+    for(auto &it:pool) {
+        if(it.fname==b.fname && it.offset==b.offset)
+            it.is_pined=1,f=1;
+        c+=it.is_pined;
+    }
+    if(!f)
+        puts("Can not find the block to pin!");
+    if(c==BufferSize) {
+        puts("Warning! You have pined all the blocks in buffer!");
+    }
+}
+void BufferManager::ReleasePinBlock(const Block &b) {
+    bool f=0;
+    for(auto &it:pool) {
+        if(it.fname==b.fname && it.offset==b.offset)
+            it.is_pined=0,f=1;
+    }
+    if(!f)
+        puts("Can not find the block to releaase pin!");    
+}
+
 #endif
