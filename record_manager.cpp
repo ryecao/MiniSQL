@@ -524,3 +524,4 @@ bool RecordManager::DeleteAllRecords(const TableInfo& datatable){
 }
 
 #endif
+
