@@ -7,16 +7,94 @@
 #include <stack>
 #include <set>
 #include <cstring>
+#include <string>
+#include <list>
+#include <cstdlib>
+#include <cstring>
+#include <cstdio>
+#include <iostream>
+#include <map>
+#include <string>
+#include <cassert>
+#include <fstream>
+#include "block.h"
+#include "buffer_manager.h"
+
 
 #define LOCAL_TEST
 #ifdef LOCAL_TEST
-#define out(x)  cout<<#x<<"= "<<x<<endl
-using namespace std;
+#define out(x)  std::cout<<#x<<"= "<<x<<std::endl
 #endif
 using std::string;
-const int BLOCK_SIZE=4*1024;
+int dcmp(double x) {
+    return fabs(x)<1e-9 ? 0 : x<0 ? -1 : 1;
+}
+struct AttrType {
+    int idata;
+    double fdata;
+    string sdata;
+    int t;
+    AttrType():             t(-1)           {}
+    AttrType(int d):        idata(d),t(0)    {}
+    AttrType(double d):     fdata(d),t(1)    {}
+    AttrType(string d):     sdata(d),t(2)    {}    
+    friend bool operator<(const AttrType &lhs, const AttrType &rhs) {
+        int t=lhs.t;
+        if(t==0)    return lhs.idata<rhs.idata;
+        if(t==1)    return dcmp(lhs.fdata-rhs.fdata)<0;
+        if(t==2)    return lhs.sdata<rhs.sdata;
+        throw puts("AttrType Not Found Type");
+    }
+    friend bool operator>(const AttrType &lhs, const AttrType &rhs) {
+        int t=lhs.t;
+        if(t==0)    return lhs.idata>rhs.idata;
+        if(t==1)    return dcmp(lhs.fdata-rhs.fdata)>0;
+        if(t==2)    return lhs.sdata>rhs.sdata;
+        throw puts("AttrType Not Found Type");
+    }
+    friend bool operator<=(const AttrType &lhs, const AttrType &rhs) {
+        return !(lhs>rhs);
+    }
+    friend bool operator>=(const AttrType &lhs, const AttrType &rhs) {
+        return !(lhs<rhs);
+    }
+    friend bool operator==(const AttrType &lhs, const AttrType &rhs) {
+        int t=lhs.t;
+        if(t==0)    return lhs.idata==rhs.idata;
+        if(t==1)    return dcmp(lhs.fdata-rhs.fdata)==0;
+        if(t==2)    return lhs.sdata==rhs.sdata;
+        throw puts("AttrType Not Found Type");
+    }
+    friend bool operator!=(const AttrType &lhs, const AttrType &rhs) {
+        return !(lhs==rhs);
+    }    
+};
+std::ostream& operator<<(std::ostream &os,const AttrType &u) {
+    os.precision(6);    int t=u.t;    
+    if(t==0)    os<<u.idata;
+    if(t==1)    os<<u.fdata;
+    if(t==2)    os<<u.sdata;
+    return os;
+}
+class IndexTypeInfo {
+public:
+    IndexTypeInfo(){};
+    IndexTypeInfo(int is, int it, int ss):index_size(is),index_type(it),string_size(ss){};
+    int getIndexSize()  {return index_size;};
+    int getIndexType()  {return index_type;};
+    int getStringSize() {return string_size;};
 
-namespace B_Plus_Tree {
+    void set_index_size(const int i)  {index_size = i;};
+    void set_index_type(const int i)  {index_type = i;};
+    void set_string_size(const int i) {string_size = i;};
+
+private:
+    int index_size;
+    int index_type;
+    int string_size;
+};
+
+namespace B_Plus_Tree {        
     template<class T,class S>
     void readVector(std::istringstream &ss,int sz,std::vector<S> &p) {
         T x;
@@ -27,20 +105,34 @@ namespace B_Plus_Tree {
     class Node {
     public:
         Node()  {}
-        Node(bool f1,bool f2,int firstp=-1):  isleaf(f1),isroot(f2)   {P.push_back(firstp);}
-        Node(const Block &b) { 
-            static char cc[BLOCK_SIZE];
-            memcpy(cc,b.data,sizeof(b.data));                        
-            std::istringstream ss((string(cc)));
-            ss>>isroot>>isleaf;
-            int psz,ksz;    ss>>psz>>ksz;
-            readVector<int,int>(ss,psz,P);            
-            if(ksz) {
-                int t;  ss>>t;                
-                if(t==0)    readVector<int,AttrType>(ss,ksz,K);
-                if(t==1)    readVector<double,AttrType>(ss,ksz,K);
-                if(t==2)    readVector<string,AttrType>(ss,ksz,K);
+        Node(bool f1,bool f2,int firstp=-1):  isroot(f1),isleaf(f2)   {
+            // P.push_back(firstp);
+        }
+        Node(const Block &bk) { 
+            static unsigned char mem[BLOCK_SIZE];
+            memcpy(mem,bk.data,BLOCK_SIZE);
+            auto b=mem;
+            isleaf=b[0],isroot=b[1];
+            auto o=b+2;            
+            int psize=readint(o),ksize=readint(o),type=readint(o),len=readint(o);                        
+            // out(bk.getoffset());
+            // out(psize);
+            // out(ksize);
+            // out(type);
+            // out(len);
+            for(int i=0;i<psize;++i) {
+                // assert(o<b+BLOCK_SIZE);
+                int p=readint(o);
+                P.push_back(p);
             }
+            for(int i=0;i<ksize;++i) {
+                AttrType k;      
+                assert(o<b+BLOCK_SIZE);
+                if(type==0) k=AttrType(readint(o));
+                if(type==1) k=AttrType(readfloat(o));
+                if(type==2) k=AttrType(readstring(o,len));                
+                K.push_back(k);
+            }                        
         }
         bool isLeaf() const          {return isleaf;}
         bool isRoot() const          {return isroot;}
@@ -52,8 +144,8 @@ namespace B_Plus_Tree {
         void insert(const AttrType &_K,int _P,int pos) {
             P.insert(P.begin()+pos,_P), K.insert(K.begin()+pos,_K);
         }
-        void insert(const AttrType &_K,int _P) {
-            K.push_back(_K),P.insert(P.end()-1,_P);
+        void insert(const AttrType &_K,int _P) {            
+            K.push_back(_K),P.insert(P.end()-1,_P);            
         }
         void appendK(const AttrType &_K) {
             K.push_back(_K);
@@ -83,27 +175,66 @@ namespace B_Plus_Tree {
             P.clear(),K.clear();
         }
         void setRoot(bool d)    {isroot=d;}
-        void writeToBlock(Block &b) {
-            std::stringstream ss;
-            ss<<isroot<<" "<<isleaf<<" ";
-            ss<<PSize()<<" "<<KSize()<<" ";            
-            for(int i=0;i<PSize();++i)  ss<<getP(i)<<" ";
-            if(KSize()) ss<<getK(0).t<<" ";
-            for(int i=0;i<KSize();++i)  ss<<getK(i)<<" ";
-            memset(b.data,0,sizeof(b.data));                    
-            memcpy(b.data,ss.str().c_str(),BLOCK_SIZE);
+        void writeToBlock(Block &bk,IndexTypeInfo tinfo) {
+            auto &b=bk.data;
+            memset(b,0,BLOCK_SIZE);
+            b[0]=isleaf,b[1]=isroot;
+            auto o=b+2;                        
+            writeint(PSize(),o),writeint(KSize(),o);            
+            // out(tinfo.getIndexType());
+            writeint(tinfo.getIndexType(),o),writeint(tinfo.getStringSize(),o);
+            for(int i=0;i<(int)P.size();++i)
+                writeint(P[i],o);
+            int t=tinfo.getIndexType();                        
+            for(int i=0;i<(int)K.size();++i) {
+                if(t==0)    writeint(K[i].idata,o);
+                if(t==1)    writefloat(K[i].fdata,o);
+                if(t==2)    writestring(K[i].sdata,tinfo.getStringSize(),o);                
+	        }            
+            BufferManager BM;
+            BM.WriteBlock(bk);
         }        
         void show() {
             printf("isleaf=%d isroot=%d\n",isleaf,isroot);
             puts("P");
             for(auto x:P)   std::cout<<x<<" ";   std::cout<<std::endl;
-            puts("K");
+            puts("K");            
             for(auto x:K)   std::cout<<x<<" ";   std::cout<<std::endl;
         }
-    private:
-        bool isleaf, isroot;        
+        bool isleaf,isroot;        
+    private:        
         std::vector<int> P;
         std::vector<AttrType> K;
+        int readint(unsigned char*&b) {
+            int x;
+            memcpy(&x,b,sizeof(int));
+            b+=sizeof(int);
+            return x;
+        }
+        double readfloat(unsigned char*&b) {
+            double x;
+            memcpy(&x,b,sizeof(double));
+            b+=sizeof(double);
+            return x;
+        }
+        string readstring(unsigned char*&b,int len) {
+            static char x[BLOCK_SIZE];
+            memcpy(x,b,sizeof(x[0])*len);   x[len]=0;
+            b+=sizeof(x[0])*len;            
+            return x;
+        }
+        void writeint(int x,unsigned char *&b) {
+            memcpy(b,&x,sizeof(int));
+            b+=sizeof(int);
+        }
+        void writefloat(double x,unsigned char *&b) {
+            memcpy(b,&x,sizeof(double));
+            b+=sizeof(double);
+        }
+        void writestring(string x,int len,unsigned char *&b) {
+            memcpy(b,x.c_str(),x.length());
+            b+=len;
+        }
     };
     bool lessF(const AttrType &a,const AttrType &b) {
         return a<b;
@@ -116,53 +247,72 @@ namespace B_Plus_Tree {
     }
     bool greaterOrEqualF(const AttrType &a,const AttrType &b) {
         return a>=b;
-    }
+    }    
+    BufferManager BM;
     class BPTree {
     public:
         BPTree()    {}
-        BPTree(const string &fname, const IndexTypeInfo &_tinfo): fname(fname) {
-            tinfo=_tinfo, root_pos = BLOCK_SIZE;
+        BPTree(const string &_fname, const IndexTypeInfo &_tinfo): fname(_fname) {
+            tinfo=_tinfo, root_pos=0;
             fanout=calcFanout();
+            out(fanout);
             setBTreeInfo();
-            root_node=Node(1,1,-1);
-            Block rb=BM.allocateNewBlock(fname);
-            root_node.writeToBlock(rb);
+            root_node=Node(1,1);
+            root_node.appendP(-1);
+            Block rb=BM.AllocateNewBlock(fname);
+            root_node.writeToBlock(rb,tinfo);
+            Block bb=BM.GetBlock(fname,0);            
         }
-        BPTree(const string &fname) {
-            Block header_block = BM.getBlock(fname,0);
-            root_node=Node(header_block);
-            root_pos = getRootPos(header_block);
+        BPTree(const string &fname) {            
+            FILE *fp=fopen((fname+".btree_info").c_str(),"r");
+            int a,b,c;
+            fscanf(fp,"%d%d%d%d%d",&root_pos,&a,&b,&c,&fanout);
+            fclose(fp);
+            Block header_block = BM.GetBlock(fname,root_pos);
+            root_node=Node(header_block); 
+            this->fname=fname;
+            tinfo=IndexTypeInfo(a,b,c);
         }
         int lower_bound_leaf(const AttrType &V) {            
-            Node u=root_node;
+            Node u=BM.GetBlock(fname,root_pos);
             int k=root_pos;
             while(!st.empty())  st.pop();
-            st.push(k);
+            st.push(k);     
+            // printf("Find at %d\n",k);
             while(!u.isLeaf()) {
-                k=u.getLastP();
+                // puts("*********");
+                // u.show();
+                // puts("***********");
+                k=-1;
                 for(int i=0;i<u.KSize();++i) if(u.getK(i)>V) {
-                    k=i;   break;
+                    k=u.getP(i);   break;
                 }
+                if(~k) {                    
+                    u=Node(BM.GetBlock(fname,k));                
+                }else {
+                    k=u.getLastP();
+                    u=Node(BM.GetBlock(fname,k));
+                }       
                 st.push(k);
-                u=Node(BM.getBlock(fname,k));                
-            }
+                // printf("Find at %d\n",k); 
+            }            
             return k;
         }
         int lower_bound(const AttrType &V) {            
             int k=lower_bound_leaf(V);      
-            Node u=Node(BM.getBlock(fname,k));
+            Node u=Node(BM.GetBlock(fname,k));
             k=u.getLastP();
             for(int i=0;i<u.KSize();++i) if(u.getK(i)>=V) {
                 k=i;    break;
             }
             if(k==-1)   return k;
-            return Node(BM.getBlock(fname,k)).getP(0);
+            return Node(BM.GetBlock(fname,k)).getP(0);
         }
         
         bool contains(const AttrType &V) {
             int o=lower_bound(V);
             if(o==-1)   return 0;
-            Node u=Node(BM.getBlock(fname,o));            
+            Node u=Node(BM.GetBlock(fname,o));            
             for(int i=0;i<u.KSize();++i) if(u.getK(i)==V)
                 return 1;
             return 0;
@@ -174,72 +324,90 @@ namespace B_Plus_Tree {
                 u.insert(V,P,i);
                 f=1;
                 break;
+            }            
+            if(!f) {                        
+                u.appendK(V);
+                u.insertP(P,u.PSize()-1);
             }
-            if(!f)  u.insert(V,P);            
         }
         void insertIntoInnerNode(Node &p,const AttrType &K,int p1,int p2) {
+            bool f=0;
             for(int i=0;i<p.PSize();++i) if(p.getP(i)==p1) {
-                p.insertP(p2,i+1),p.insertK(K,i);
-                return;
+                p.insertP(p2,i+1),p.insertK(K,i);                
+                f=1;
+                break;
             }
+            if(!f)  throw puts("insertIntoInnerNode f=0!!!");
         }
         void insertInParent(Block &b1,const AttrType &K,Block &b2) {
             Node u1=Node(b1),u2=Node(b2);
             st.pop();
             if(u1.isRoot()) {
-                Block pb=BM.allocateNewBlock(fname);
+                Block pb=BM.AllocateNewBlock(fname);
                 Node p(1,0);
-                p.appendP(b1.getpos()),p.appendP(b2.getpos());
+                p.appendP(b1.getoffset()),p.appendP(b2.getoffset());
                 p.appendK(K);
-                u1.setRoot(0),u1.writeToBlock(b1);
-                root_node=p,root_pos=pb.getpos();
+                u1.setRoot(0),u1.writeToBlock(b1,tinfo);
+                root_node=p,root_pos=pb.getoffset();                
                 setBTreeInfo();
+                p.writeToBlock(pb,tinfo),u1.writeToBlock(b1,tinfo),u2.writeToBlock(b2,tinfo);
             }else {
-                Block nowb=BM.getBlock(fname,st.top());
+                // printf("@ %d\n",st.top());  fflush(stdout);
+                Block nowb=BM.GetBlock(fname,st.top());
                 Node p=Node(nowb);
                 if(p.PSize()<fanout) {  //the parent node still has capcity                    
-                    insertIntoInnerNode(p,K,b1.getpos(),b2.getpos());
+                    insertIntoInnerNode(p,K,b1.getoffset(),b2.getoffset());
+                    p.writeToBlock(nowb,tinfo);
                 }else {
                     Node pp=p;
-                    insertIntoInnerNode(pp,K,b1.getpos(),b2.getpos());
+                    insertIntoInnerNode(pp,K,b1.getoffset(),b2.getoffset());
+                    if(!(pp.PSize()==fanout+1))                    
+                        throw puts("insertInParent yoyoyo");
                     Node &p1=p,p2(0,0);
                     p1.clearAll();
-                    Block newb=BM.allocateNewBlock(fname);
+                    Block newb=BM.AllocateNewBlock(fname);
                     for(int i=0;i<(fanout+1)/2;++i) {
                         p1.appendP(pp.getP(i));
-                        if(i<(fanout+1)/2)
+                        if(i<(fanout+1)/2-1)
                             p1.appendK(pp.getK(i));
-                    }
+                    }                    
                     for(int i=(fanout+1)/2;i<=fanout;++i) {
                         p2.appendP(pp.getP(i));
                         if(i<fanout)
                             p2.appendK(pp.getK(i));
                     }
-                    p1.writeToBlock(nowb),p2.writeToBlock(newb);
-                    insertInParent(nowb,pp.getK((fanout+1)/2),newb);
+                    p1.writeToBlock(nowb,tinfo),p2.writeToBlock(newb,tinfo);
+                    insertInParent(nowb,pp.getK((fanout+1)/2-1),newb);
                 }
             }
         }        
         void insert(const AttrType &V,const int P) {    //insert the pair(V,P)  V->index P->the block of the record
-            int k=lower_bound_leaf(V);
-            Block nowb=BM.getBlock(fname,k);
-            Node u=Node(nowb);
+            int k=lower_bound_leaf(V);                        
+            Block nowb=BM.GetBlock(fname,k);
+            Node u=Node(nowb);            
+            // printf("offset=%d %d\n",k,u.KSize());
             if(u.KSize()+1<fanout) {        //The block still has capcity
                 insertIntoLeafNode(u,V,P);
-                u.writeToBlock(nowb);
-            }else {
-                Node v=u,u2(1,0,k=u.getLastP());
+                u.writeToBlock(nowb,tinfo);                
+            }else {               
+                // puts("BIG");
+                Node v=u,u2(0,1);
+                k=u.getLastP();
                 insertIntoLeafNode(v,V,P);        
                 Node &u1=u;
                 u1.clearAll(),u2.clearAll();
-                Block newb=BM.allocateNewBlock(fname);      //Split the node into two nodes
+                Block newb=BM.AllocateNewBlock(fname);      //Split the node into two nodes
                 for(int i=0;i<(fanout+1)/2;++i)
                     u1.appendK(v.getK(i)),u1.appendP(v.getP(i));
-                u1.appendP(newb.getpos());
+                u1.appendP(newb.getoffset());
                 for(int i=(fanout+1)/2;i<fanout;++i)
                     u2.appendK(v.getK(i)),u2.appendP(v.getP(i));
                 u2.appendP(k);
-                u.writeToBlock(nowb),u2.writeToBlock(newb);                
+                u1.writeToBlock(nowb,tinfo),u2.writeToBlock(newb,tinfo);                
+                std::stack<int> tmp=st;
+                // puts("stack");
+                // while(!tmp.empty()) printf("%d ",tmp.top()),tmp.pop();  fflush(stdout);
+
                 insertInParent(nowb,u2.getK(0),newb);
             }
         }
@@ -254,33 +422,33 @@ namespace B_Plus_Tree {
             deleteFromNode(u,K,P);
             if(u.isRoot() && u.PSize()==1) {    //u is root and u has only one child
                 if(u.getP(0)==-1) {
-                    u.writeToBlock(b);
+                    u.writeToBlock(b,tinfo);
                     return 1;
                 }
-                Block newb=BM.getBlock(fname,u.getP(0));
+                Block newb=BM.GetBlock(fname,u.getP(0));
                 Node v(newb);   v.setRoot(1);
-                v.writeToBlock(newb);
-                BM.freeBlock(b);
-                root_pos=newb.getpos(),root_node=v;
+                v.writeToBlock(newb,tinfo);
+                BM.FreeBlock(b);
+                root_pos=newb.getoffset(),root_node=v;
                 setBTreeInfo();
                 return 1;
             }else {
-                u.writeToBlock(b);
+                u.writeToBlock(b,tinfo);
                 if(!u.isRoot() && checkNodeIsTooSmall(u)) {
                     st.pop();
                     int p_pos=st.top();
-                    Block pb=BM.getBlock(fname,p_pos);
+                    Block pb=BM.GetBlock(fname,p_pos);
                     Node p(pb);
                     Block newb; AttrType newp;
                     bool f=0,ft=0;
-                    for(int i=0;i<p.PSize();++i) if(p.getP(i)==b.getpos()) {    //find neibor                      
+                    for(int i=0;i<p.PSize();++i) if(p.getP(i)==b.getoffset()) {    //find neibor                      
                         f=1;
                         if(i+1==p.PSize()) {
-                            newb=BM.getBlock(fname,p.getP(i-1));
+                            newb=BM.GetBlock(fname,p.getP(i-1));
                             newp=p.getK(i-1);
                             ft=0;
                         }else {
-                            newb=BM.getBlock(fname,p.getP(i+1));
+                            newb=BM.GetBlock(fname,p.getP(i+1));
                             newp=p.getK(i);
                             ft=1;
                         }
@@ -302,9 +470,9 @@ namespace B_Plus_Tree {
                             for(int i=0;i<u1.PSize();++i)
                                 u2.appendP(u1.getP(i));
                         }
-                        u1.writeToBlock(b),u2.writeToBlock(newb);
-                        delete_entry(pb,newp,newb.getpos());
-                        BM.freeBlock(newb);
+                        u1.writeToBlock(b,tinfo),u2.writeToBlock(newb,tinfo);
+                        delete_entry(pb,newp,newb.getoffset());
+                        BM.FreeBlock(newb);
                     }else {
                         if(!ft) {
                             if(!u1.isLeaf()) {
@@ -337,13 +505,13 @@ namespace B_Plus_Tree {
                         }
                     }
                 }else {
-                    throw "Unexpected Situation at 'b_plus_tree.cpp '";
+                    throw puts("Unexpected Situation at 'b_plus_tree.cpp '");
                 }
             }            
         }
         bool erase(AttrType &V) {
             int k=lower_bound_leaf(V);
-            Block b=BM.getBlock(fname,k);
+            Block b=BM.GetBlock(fname,k);
             Node u(b);
             for(int i=0;i<u.KSize();++i) if(u.getK(i)==V)
                 return delete_entry(b,V,u.getP(i));
@@ -361,8 +529,29 @@ namespace B_Plus_Tree {
         std::set<int> getAllGreaterOrEqual(const AttrType &V) {
             return findAllOp2(V,greaterOrEqualF);
         }
+        void show() {            
+            dfs(root_pos,-1);
+        }        
+        void dfs(int u,int f) {           
+            puts("********************");
+            Node uu(BM.GetBlock(fname,u));
+            puts("----------------------------------------------");
+            printf("at offset=%d fa=%d isroot=%d isleaf=%d\n",u,f,uu.isRoot(),uu.isLeaf());
+            puts("pointer:");
+            for(int i=0;i<uu.PSize();++i)
+                printf("%d ",uu.getP(i));   puts("");
+            puts("keys:");      
+            fflush(stdout);
+            for(int i=0;i<uu.KSize();++i) {                
+                std::cout<<uu.getK(i)<<" "; 
+            }std::cout<<std::endl;
+            puts("----------------------------------------------");
+            if(uu.isLeaf()) return;
+            for(int i=0;i<uu.PSize();++i)
+                dfs(uu.getP(i),u);
+        }
     private:
-        string fname;   // {database}_{tablename}_{indename}.index
+        std::string fname;   // {tablename}_{indename}.index
         IndexTypeInfo tinfo;
         Node root_node;
         int fanout;
@@ -370,27 +559,15 @@ namespace B_Plus_Tree {
         std::stack<int> st;     // maintain a stack to get the node's parent
         int calcFanout() {
             int u=BLOCK_SIZE;
-            u-=2*sizeof(bool)+2*sizeof(int);
+            u-=2*sizeof(char)+4*sizeof(int);    //isRoot,isLeaf,PSize(),KSize(),type,length
             int v=sizeof(int)+tinfo.getIndexSize();
             return u/v;
         }
-        void setBTreeInfo() {
-            // Block btree_head_info_block = BM.allocateNewBlock(fname);
-            // btree_head_info_block.seek(0);
-            // btree_head_info_block.append(root_pos);
-            // btree_head_info_block.append(tinfo.getIndexSize());
-            // btree_head_info_block.append(tinfo.getStringSize());
-            // BM.writeBlock(btree_head_info_block);
+        void setBTreeInfo() {            
             FILE *fp=fopen((fname+".btree_info").c_str(),"w");            
-            fprintf(fp,"%d\n",root_pos);
+            fprintf(fp,"%d %d %d %d %d\n",root_pos,tinfo.getIndexSize(),tinfo.getIndexType(),tinfo.getStringSize(),fanout);
             fclose(fp);
-        }
-        int getRootPos(Block &b) {
-            FILE *fp=fopen((fname+".btree_info").c_str(),"w");
-            if(!fp)     throw "Can not find the btree info error";
-            int p;  fscanf(fp,"%d",&p);
-            return p;
-        }
+        }        
         bool checkNodeIsTooSmall(Node &u) {
             return (u.isLeaf() && u.KSize()<fanout/2) || (!u.isLeaf() && u.PSize()<(fanout+1)/2);
         }
@@ -400,18 +577,18 @@ namespace B_Plus_Tree {
                 f=1;
                 p.setK(i,t);   break;
             }
-            p.writeToBlock(pb),u1.writeToBlock(b),u2.writeToBlock(newb);
+            p.writeToBlock(pb,tinfo),u1.writeToBlock(b,tinfo),u2.writeToBlock(newb,tinfo);
         }        
         std::set<int> findAllOp1(const AttrType &V,bool (*cmp)(const AttrType &a,const AttrType &b)) {
             int o=root_pos;
             while(1) {
-                Node u(BM.getBlock(fname,o));
+                Node u(BM.GetBlock(fname,o));
                 if(u.isLeaf())  break;
                 o=u.getP(0);
             }
             std::set<int> res;
             while(~o) {
-                Node u(BM.getBlock(fname,o));
+                Node u(BM.GetBlock(fname,o));
                 bool f=0;
                 for(int i=0;i<u.KSize();++i) {
                     if(cmp(u.getK(i),V)) res.insert(u.getP(i));
@@ -428,7 +605,7 @@ namespace B_Plus_Tree {
             int o=lower_bound(V);
             std::set<int> res;
             while(~o) {
-                Node u(BM.getBlock(fname,o));
+                Node u(BM.GetBlock(fname,o));
                 for(int i=0;i<u.KSize();++i) {
                     if(cmp(u.getK(i),V))    res.insert(u.getP(i))                        ;
                 }
@@ -440,10 +617,56 @@ namespace B_Plus_Tree {
 }
 
 #ifdef LOCAL_TEST
+void dd_binary_node() {
+    using namespace B_Plus_Tree;
+    Node u;
+    u.isleaf=1,u.isroot=1;
+    for(int i=0;i<10;++i)   u.appendP(i);
+    for(int i=0;i<10;++i)   u.appendK(AttrType("ssss"));
+    Block b;
+    IndexTypeInfo t(2,10,10);
+    u.writeToBlock(b,t);
+    Node v(b);
+    out(v.KSize());
+    v.show();
+}
+void dd_create_tree() {
+    IndexTypeInfo t(10,2,10);
+    string fname="testtable_testindex.index";
+    using namespace B_Plus_Tree;
+    BPTree tree(fname,t);
+    BPTree tree1(fname);
+    tree1.show();
+}
+void dd_insert() {
+    IndexTypeInfo t(4,0,-1);
+    string fname="testtable_testindex.index";    
+    using namespace B_Plus_Tree;    
+    BPTree tree1(fname);    
+    for(int i=0;i<50000;++i) {
+        // printf("Insert %d\n",i);    fflush(stdout);
+        // tree1.insert(AttrType(i),i);        
+    }    
+    puts("FileServer");
+    for(auto &it:FPServer)
+        printf("%s %d\n",it.first.c_str(),it.second.fsize);    
+    tree1.show();
+}
+void dd_buffer_allocate_new() {
+    BufferManager BM;
+    Block b1=BM.AllocateNewBlock("testt");
+    out(b1.getoffset());
+    Block b2=BM.AllocateNewBlock("testt");
+    out(b2.getoffset());
+    Block b3=BM.AllocateNewBlock("testt");
+    out(b3.getoffset());
+}
 int main(int argc, char const *argv[]) {
-    // dd();
-    int a,b;
-    while(std::cin>>a>>b)    std::cout<<(a+b)<<"\n";
+    // dd_binary_node();
+    // dd_create_tree();
+    // dd_insert();
+    // dd_buffer_allocate_new();
+    
     return 0;
 }
 #endif
