@@ -1,10 +1,8 @@
-#ifndef RECORD_MANAGER_CC
-#define RECORD_MANAGER_CC
-
 #include "record_manager.h"
 #include "buffer_manager.h"
-#include "b_plus_tree.h"
+#include "block.h"
 #include <cassert>
+#include <string>
 #define BLOCK_SIZE 4096
 
 struct FileStatus {
@@ -319,17 +317,6 @@ int RecordManager::InsertRecord(const TableInfo &datatable, const std::vector<st
 	tablename.erase(tablename.end()-1);			
 	std::vector<std::string> ordered = datatable.attribute_names_ordered(); 
 	auto dataInfo = datatable.all_attributes();							
-	for(int i=0;i<datatable.attribute_number();i++){
-		std::string target=ordered[i];
-		AttributeInfo ATT = dataInfo[target];
-		std::vector<std::string> Index = ATT.index_names();
-		if(Index.size()){
-			// insert into btree
-			std::string btreename = tablename + "." + ATT.name() + ".index";
-			BPTree Tree = BPTree(btreename);
-			Tree.insert(entry[i],offset);
-		}
-	}
 	T.WriteBlock(block);
 	blockStatus[filename][offset]++;
 	return offset;
@@ -522,6 +509,3 @@ bool RecordManager::DeleteAllRecords(const TableInfo& datatable){
 	}
 	return opt;
 }
-
-#endif
-

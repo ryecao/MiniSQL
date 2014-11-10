@@ -107,6 +107,8 @@ Info API::CreateTable(SqlCommandCreateTable* command){
       table.add_attribute(single_attribute_info);
     }
     table.set_attribute_number(attribute_count);
+
+    table.attribute(table.primary_key()).add_index("#pri_" + table_name +"_"+it->first);
     table.set_attribute_names_ordered(command->attribute_names_ordered());
     if(catalog_manager.RegisterTable(table)){
       return Info();
@@ -323,6 +325,36 @@ Info API::DropIndex(SqlCommandDropIndex* command){
 
 }
 
+bool CheckUnqiueAndPrimaryKey(const TableInfo& table, const std::vector<std::string>& values){
+  IndexManager index_manager;
+  RecordManager record_manager;
+  std::vector<std::string> attributes_to_be_checked;
+  attributes_to_be_checked = table.unique();
+  attributes_to_be_checked.push_back(table.primary_key());
+
+  for (auto it : attributes_to_be_checked){
+    int attribute_index = table.attribute_index(it);
+    
+    if (!table.attribute(it).index_names().empty()){//has index
+      std::string index_name = table.attribute(it).index_names.empty().at(0);
+      IndexInfo index_info(index_name, table.table_name(), it);
+      if (index_manager.FindValue(table,index_info,values.at(attribute_index))){ // has value
+        return false;
+      }
+    }
+    else{
+      WhereClause where;
+      where.kColumnName = it;
+      where.kOperator ="=";
+      where.kCondition = values.at(attribute_index);
+      if (!record_manager.FindRecordsWithNoIndex(table,where).empty()){
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 Info API::InsertInto(SqlCommandInsertInto* command){
   CatalogManager catalog_manager;
   RecordManager record_manager;
@@ -340,7 +372,9 @@ Info API::InsertInto(SqlCommandInsertInto* command){
   if (table.attribute_names_ordered().size()!=values.size()){
     return Info("Number of values not equals to the number of attributes");
   }
-
+  if (!CheckUnqiueAndPrimaryKey(table,values)){
+    return Info("Violation of uniqueness");
+  }
   offset = record_manager.InsertRecord(table,values);
   if (offset == -1){
     return Info("Insert failed");

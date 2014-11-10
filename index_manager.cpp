@@ -36,7 +36,7 @@ bool IndexManager::CreateIndex(int type, int size, const IndexInfo &index){
 bool IndexManager::AddRecord(const TableInfo &table, const IndexInfo &index, std::string value, int offset){
   int value_i;
   float value_f;
-  int type = table.attribute(index.name()).type();
+  int type = table.attribute(index.attribute_name()).type();
   std::string file_name = index.name() + ".index";
   B_Plus_Tree::BPTree bpt(file_name);
 
@@ -61,7 +61,7 @@ bool IndexManager::AddRecord(const TableInfo &table, const IndexInfo &index, std
 bool IndexManager::DeleteRecord(const TableInfo &table, const IndexInfo &index, std::string value, int offset){
   int value_i;
   float value_f;
-  int type = table.attribute(index.name()).type();
+  int type = table.attribute(index.attribute_name()).type();
   std::string file_name = index.name() + ".index";
   B_Plus_Tree::BPTree bpt(file_name);
 
@@ -92,10 +92,33 @@ bool IndexManager::EmptyIndex(const IndexInfo &index){
   return true;  
 }
 
+bool IndexManager::FindValue(const TableInfo &table, const IndexInfo& index, std::string value){
+  std::string file_name = index.name() + ".index";
+  B_Plus_Tree::BPTree bpt(file_name);
+  int res;
+  int type = table.attribute(index.attribute_name()).type();
+  if (type == 0){
+    res = bpt.find(AttrType(std::stoi(value)));
+  }
+  else if(type == 1){
+    res = bpt.find(AttrType(std::stof(value)));
+  }
+  else{
+    res = bpt.find(AttrType(value));
+  }
+
+  if (res == -1){
+    return false;
+  }
+  else{
+    return true;
+  }
+}
+
 std::vector<int> IndexManager::FindRecords(const TableInfo &table, const IndexInfo& index, const WhereClause& where_clause){
   std::string file_name = index.name() + ".index";
   B_Plus_Tree::BPTree bpt(file_name);
-  int type = table.attribute(index.name()).type();
+  int type = table.attribute(index.attribute_name()).type();
   std::vector<int> res;
   std::string attribute_name = index.attribute_name();
   std::string condition = where_clause.kCondition;

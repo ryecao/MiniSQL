@@ -63,6 +63,22 @@ public:
     }
     return res;
   };
+  std::string primary_key() const {
+    for (auto it : attribute_info_){
+      if (it.second.is_primary_key()){
+        return it.first;
+      }
+    }
+  };
+  std::vector<std::string> unique() const {
+    std::vector<std::string> res;
+    for (auto it : attribute_info_){
+      if (it.second.is_unique()){
+        res.push_back(it.first)
+      }
+    }
+    return res;
+  };
   int attribute_index(const std::string & attribute_name){
     auto i = std::find(attribute_names_ordered_.begin(), attribute_names_ordered_.end(),attribute_name);
     int position= std::distance(attribute_names_ordered_.begin(),i);
