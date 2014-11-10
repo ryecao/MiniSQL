@@ -174,6 +174,12 @@ namespace B_Plus_Tree {
         void clearAll() {
             P.clear(),K.clear();
         }
+        void popbackP() {
+            P.pop_back();
+        }
+        void popbackK() {
+            K.pop_back();
+        }
         void setRoot(bool d)    {isroot=d;}
         void writeToBlock(Block &bk,IndexTypeInfo tinfo) {
             auto &b=bk.data;
@@ -412,15 +418,19 @@ namespace B_Plus_Tree {
             }
         }
         void deleteFromNode(Node &u,const AttrType &K,int P) {
-            for(int i=0;i<u.KSize();++i) if(u.getK(i)==K)
+            for(int i=0;i<u.KSize();++i) if(u.getK(i)==K) {
                 u.eraseK(i);
-            for(int i=0;i<u.PSize();++i) if(u.getP(i)==P)
+                break;
+            }
+            for(int i=0;i<u.PSize();++i) if(u.getP(i)==P) {
                 u.eraseP(i);
+                break;
+            }
         }
         bool delete_entry(Block &b,const AttrType &K,int P) {
             Node u(b);
             deleteFromNode(u,K,P);
-            if(u.isRoot() && u.PSize()==1) {    //u is root and u has only one child
+            if(u.isRoot() && u.PSize()==1) {    //u is root and u has only one child                
                 if(u.getP(0)==-1) {
                     u.writeToBlock(b,tinfo);
                     return 1;
@@ -434,7 +444,8 @@ namespace B_Plus_Tree {
                 return 1;
             }else {
                 u.writeToBlock(b,tinfo);
-                if(!u.isRoot() && checkNodeIsTooSmall(u)) {
+                assert(u.PSize()==u.KSize()+1);
+                if(!u.isRoot() && checkNodeIsTooSmall(u)) {                    
                     st.pop();
                     int p_pos=st.top();
                     Block pb=BM.GetBlock(fname,p_pos);
@@ -454,32 +465,33 @@ namespace B_Plus_Tree {
                         }
                     }
                     Node u2(newb),u1=u;
+                    assert(f);
                     if(u1.PSize()+u2.PSize()<=fanout) {     //Able to merge to one node
                         if(ft)
                             std::swap(u1,u2),std::swap(b,newb);
                         if(!u1.isLeaf()) {
                             u2.appendK(newp);
-                            for(int i=0;i<u.KSize();++i)
+                            for(int i=0;i<u1.KSize();++i)
                                 u2.appendK(u1.getK(i));
-                            for(int i=0;i<u.PSize();++i)
+                            for(int i=0;i<u1.PSize();++i)
                                 u2.appendP(u1.getP(i));
                         }else {
-                            u2.appendP(-1);
+                            u2.popbackP();
                             for(int i=0;i<u1.KSize();++i)
                                 u2.appendK(u1.getK(i));
                             for(int i=0;i<u1.PSize();++i)
                                 u2.appendP(u1.getP(i));
                         }
                         u1.writeToBlock(b,tinfo),u2.writeToBlock(newb,tinfo);
-                        delete_entry(pb,newp,newb.getoffset());
-                        BM.FreeBlock(newb);
+                        delete_entry(pb,newp,b.getoffset());
+                        BM.FreeBlock(b);    //!!HERE
                     }else {
                         if(!ft) {
                             if(!u1.isLeaf()) {
                                 int nppm=u2.getP(u2.PSize()-1); 
-                                AttrType t=u2.getK(u2.KSize()-1);                                
-                                u2.eraseP(u2.PSize()-1);
-                                u2.eraseP(u2.KSize()-1);
+                                AttrType t=u2.getK(u2.KSize()-1);                                                                
+                                u2.popbackP();
+                                u2.popbackK();
                                 u1.insertP(nppm,0),u1.insertK(newp,0);
                                 deleteOp1(p,pb,u1,b,u2,newb,newp,t);                                
                             }else {
@@ -505,16 +517,20 @@ namespace B_Plus_Tree {
                         }
                     }
                 }else {
-                    throw puts("Unexpected Situation at 'b_plus_tree.cpp '");
+                    // throw puts("Unexpected Situation at 'b_plus_tree.cpp '");
                 }
             }            
         }
-        bool erase(AttrType &V) {
+        bool erase(const AttrType &V) {
             int k=lower_bound_leaf(V);
+            out(k);
             Block b=BM.GetBlock(fname,k);
             Node u(b);
-            for(int i=0;i<u.KSize();++i) if(u.getK(i)==V)
-                return delete_entry(b,V,u.getP(i));
+            for(int i=0;i<u.KSize();++i) if(u.getK(i)==V) {
+                puts("Find to erase");
+                bool f=delete_entry(b,V,u.getP(i));
+                return 1;
+            }
             return 0;
         }
         std::set<int> getAllLess(const AttrType &V) {
@@ -640,17 +656,42 @@ void dd_create_tree() {
 }
 void dd_insert() {
     IndexTypeInfo t(4,0,-1);
-    string fname="testtable_testindex.index";    
-    using namespace B_Plus_Tree;    
-    BPTree tree1(fname);    
-    for(int i=0;i<50000;++i) {
+    string fname="testtable_testindex.index";
+    using namespace B_Plus_Tree;
+    BPTree tree(fname,t);
+    // BPTree tree1(fname);
+    for(int i=1;i<=10;++i) {
         // printf("Insert %d\n",i);    fflush(stdout);
-        // tree1.insert(AttrType(i),i);        
+        tree.insert(AttrType(i),-i);
     }    
     puts("FileServer");
     for(auto &it:FPServer)
         printf("%s %d\n",it.first.c_str(),it.second.fsize);    
-    tree1.show();
+    tree.show();
+}
+void dd_delete() {
+    IndexTypeInfo t(4,0,-1);
+    string fname="testtable_testindex.index";
+    remove(fname.c_str());
+    remove((fname+".btree_info").c_str());
+    remove((fname+".freeinfo").c_str());
+    using namespace B_Plus_Tree;
+    BPTree tree(fname,t);
+    // BPTree tree1(fname);
+    for(int i=1;i<=10000;++i) {
+        // printf("Insert %d\n",i);    fflush(stdout);
+        tree.insert(AttrType(i),-i);
+    }    
+    // for(int i=10000;i>=-10000;--i) {
+    //     printf("Erase %d\n",i);    fflush(stdout);
+    //     bool f=tree.erase(AttrType(i));
+    //     out(f);
+    // }
+    // tree.erase(AttrType(1));
+    // puts("FileServer");
+    // for(auto &it:FPServer)
+    //     printf("%s %d\n",it.first.c_str(),it.second.fsize);    
+    tree.show();
 }
 void dd_buffer_allocate_new() {
     BufferManager BM;
@@ -666,7 +707,7 @@ int main(int argc, char const *argv[]) {
     // dd_create_tree();
     // dd_insert();
     // dd_buffer_allocate_new();
-    
+    dd_delete();
     return 0;
 }
 #endif
