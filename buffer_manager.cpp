@@ -2,10 +2,19 @@
 #include "buffer_manager.h"
 
 std::map<std::string,FilePointer> FPServer;
+std::map<std::string,std::set<int> > FreeFPServer;
 FilePointer &FPOpenFile(const std::string &fname) {
     auto f=FPServer.find(fname);    
     if(f!=FPServer.end()) return f->second;    
     FilePointer F;
+    FILE *freefp=fopen((fname+".freeinfo").c_str(),"r");
+    if(freefp) {
+        int o;
+        std::set<int> s;
+        while(fscanf(freefp,"%d",&o)==1)    s.insert(o);
+        FreeFPServer[fname]=s;
+        fclose(freefp);
+    }
     F.fp=fopen(fname.c_str(),"rb+");
     if(!F.fp) {
         F.fp=fopen(fname.c_str(),"w");        
@@ -50,7 +59,8 @@ Block BufferManager::AddBlock(const std::string &fname,int offset)  {
     return res;    
 }
 void BufferManager::WriteBack(const Block &b) {
-    if(b.is_dirty) {                
+    // out(b.is_dirty);
+    {                
         FilePointer &F=FPOpenFile(b.fname);        
         fseek(F.fp,b.offset,SEEK_SET);
         fwrite(b.data,BLOCK_SIZE,sizeof(b.data[0]),F.fp);
@@ -73,6 +83,7 @@ void BufferManager::WriteBlock(const Block &b) {
     t.is_dirty=1;    
 }
 void BufferManager::FreeBlock(const Block &b) {
+    FPOpenFile(b.fname);
     if(fm.BlockIsFree(b))
         throw puts("You are freeing a block which has been freed!!");
     for(auto it=pool.begin();it!=pool.end();++it) if(it->fname==b.fname && it->offset==b.offset) {
@@ -83,6 +94,12 @@ void BufferManager::FreeBlock(const Block &b) {
 }
 void BufferManager::ClearFile(const std::string &fname) {
     fm.ClearAllBlock(fname);
+    auto f=FPServer.find(fname);
+    if(f!=FPServer.end()) {
+        FilePointer &F=FPOpenFile(fname);
+        fclose(F.fp);
+        FPServer.erase(f);
+    }
     for(auto it=pool.begin();it!=pool.end();) {
         if(it->fname==fname)
             pool.erase(it++);
