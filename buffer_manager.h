@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <set>
 #include <string>
 #include <fstream>
 #define WRITE_MODE "a+"
@@ -23,6 +24,7 @@ struct FilePointer {
     int fsize;
 };
 extern std::map<std::string,FilePointer> FPServer;
+extern std::map<std::string,std::set<int> > FreeFPServer;
 FilePointer &FPOpenFile(const std::string &fname);
 class FreeBlockManager {
 public:
@@ -31,30 +33,15 @@ public:
         memset(null,0,sizeof(null));
     }
     int AllocateFreeBlock(const std::string &fname) {
-        auto f=ds.find(fname);
-        int o=-1;        
-        if(f==ds.end()) {            
-            FilePointer F=FPOpenFile(FileName(fname));
-            std::list<int> p;        
-            {
-                while(fscanf(F.fp,"%d",&o)==1)    p.push_back(o);                
-                if(p.empty())   throw "Try to get a free block which not exixts!!! 1";
-                o=p.front();
-                p.erase(p.begin());
-                if(!p.empty())  ds[fname]=p;                
-                return o;
-            }                        
-            throw "Try to get a free block which not exixts!!!  2";
-            return -1;
-        }else {
-            if(f->second.empty())
-                throw "Try to get a free block which not exixts!!! 3";
-            o=f->second.front();
-            f->second.erase(f->second.begin());            
-            return o;
-        }
+        FP &F=FPOpenFile(fname);
+        auto f=FreeFPServer.find(fname);        
+        assert(f!=FreeFPServer.end() && !f->second.empty());
+        int o=*(f->second.begin());
+        fseek(F.fp,o,SEEK_SET);
+        fwrite(null,BLOCK_SIZE,1,F.fp);
+        return o;
     }
-    int AllocateNewBlock(const std::string &fname) {        
+    int AllocateNewBlock(const std::string &fname) {
         FP &F=FPOpenFile(fname);        
         fseek(F.fp,0,SEEK_END);                                        
         fwrite(null,BLOCK_SIZE,sizeof(null[0]),F.fp);
@@ -62,50 +49,36 @@ public:
         F.fsize+=BLOCK_SIZE;        
         return o;
     }
-    bool HasFreeBlock(const std::string &fname) {        
-        auto f=ds.find(fname);
-        if(f!=ds.end()) return !f->second.empty();
-        std::list<int> p;
+    bool HasFreeBlock(const std::string &fname) {                
         int o;        
-        FilePointer F=FPOpenFile(fname+".freeinfo");        
-        while(fscanf(F.fp,"%d",&o)==1)    p.push_back(o);
-        if(p.empty())   return 0;
-        ds[fname]=p;        
-        return 1;
+        FilePointer F=FPOpenFile(fname+".freeinfo");
+        fseek(F.fp,0,SEEK_SET);
+        bool f=0;
+        while(fscanf(F.fp,"%d",&o)==1)    f=1;
+        return f;
     }
     bool BlockIsFree(const Block &b) {
-        auto f=ds.find(b.fname);
-        if(f==ds.end()) {            
-            FilePointer F=FPOpenFile(FileName(b.fname));            
-            int o;
-            while(fscanf(F.fp,"%d",&o)==1) if(o==b.offset) {                
-                return 1;
-            }            
-            return 0;
-        }else {
-            for(auto x:f->second) if(x==b.offset)   return 1;
-            return 0;
-        }
-        return 0;        
+        auto f=FreeFPServer.find(b.fname);
+        if(f==FreeFPServer.end()) return 0;
+        return f->second.count(b.getoffset());        
     }
     void AddFreeBlock(const Block &b) {
-        ds[b.fname].push_back(b.offset);
+        FreeFPServer[b.fname].insert(b.getoffset());
     }
     void ClearAllBlock(const std::string &fname) {
-        auto f=ds.find(fname);
-        if(f!=ds.end()) ds.erase(f);
-        remove(FileName(fname).c_str());
+        auto f=FreeFPServer.find(fname);
+        if(f!=FreeFPServer.end())   FreeFPServer.erase(f);
+        remove((fname+".freeinfo").c_str());
     }
     void Flush() {
-        for(auto &it:ds) {                        
+        for(auto &it:FreeFPServer) {
             FILE *fp=fopen(FileName(it.first).c_str(),"w");
             for(auto x:it.second)
                 fprintf(fp,"%d ",x);            
             fclose(fp);
         }
     }
-private:
-    std::map<std::string,std::list<int> > ds;
+private:    
     static unsigned char null[BLOCK_SIZE];
     std::string FileName(const std::string &fname) {
         return fname+".freeinfo";
@@ -113,7 +86,7 @@ private:
 };
 class BufferManager {    
 public:
-    static const int BufferSize = 1;
+    static const int BufferSize = 100;
     BufferManager();
     ~BufferManager();
     Block AllocateNewBlock(std::string fname);   //allocate a new block in file '$fname'
