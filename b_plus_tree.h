@@ -100,6 +100,7 @@ namespace B_Plus_Tree {
         std::vector<int> getAllLessOrEqual(const AttrType &V);
         std::vector<int> getAllGreater(const AttrType &V);
         std::vector<int> getAllGreaterOrEqual(const AttrType &V);
+        void deleteAll();
         void show();        
     private:
         std::string fname;   // {tablename}_{indename}.index
