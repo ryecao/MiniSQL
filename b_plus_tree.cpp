@@ -92,7 +92,7 @@ namespace B_Plus_Tree {
             if(t==0)    writeint(K[i].idata,o);
             if(t==1)    writefloat(K[i].fdata,o);
             if(t==2)    writestring(K[i].sdata,tinfo.getStringSize(),o);                
-           }            
+	       }            
         BufferManager BM;
         BM.WriteBlock(bk);
     }        
@@ -157,8 +157,7 @@ namespace B_Plus_Tree {
         root_node=Node(1,1);
         root_node.appendP(-1);
         Block rb=BM.AllocateNewBlock(fname);
-        root_node.writeToBlock(rb,tinfo);
-        Block bb=BM.GetBlock(fname,0);            
+        root_node.writeToBlock(rb,tinfo);        
     }
     BPTree::BPTree(const string &fname) {            
         FILE *fp=fopen((fname+".btree_info").c_str(),"r");
@@ -495,15 +494,26 @@ namespace B_Plus_Tree {
         while(~o) {
             Node u(BM.GetBlock(fname,o));
             for(int i=0;i<u.KSize();++i) {
-                if(cmp(u.getK(i),V))    res.push_back(u.getP(i))                        ;
+                if(cmp(u.getK(i),V))    res.push_back(u.getP(i));
             }
             o=u.getP(u.PSize()-1);
         }
         return res;
-    }    
+    }
+    void BPTree::deleteAll() {
+        BM.ClearFile(fname);
+        root_pos=0;
+        fanout=calcFanout();        
+        setBTreeInfo();
+        root_node=Node(1,1);
+        root_node.appendP(-1);
+        Block rb=BM.AllocateNewBlock(fname);
+        out(rb.getoffset());
+        root_node.writeToBlock(rb,tinfo);
+    }
 }
 
-/*
+#ifdef LOCA_TEST_BPTREE
 void dd_create_tree() {
     IndexTypeInfo t(10,2,10);
     string fname="testtable_testindex.index";
@@ -536,19 +546,21 @@ void dd_delete() {
     for(int i=1;i<=1000;++i) {        
         tree.insert(AttrType(i),-i);
     }    
-    using std::vector;    
-    for(int i=-1000;i<=10005;++i) {
-        int f=tree.find(i);
-        if(i>=1&&i<=1000) {
-            if(f!=-i) {
-                out(i);
-                out(f);
-                assert(0);
-            }
-        }else {
-            assert(f==-1);
-        }
-    }
+    // using std::vector;    
+    // for(int i=-1000;i<=10005;++i) {
+    //     int f=tree.find(i);
+    //     if(i>=1&&i<=1000) {
+    //         if(f!=-i) {
+    //             out(i);
+    //             out(f);
+    //             assert(0);
+    //         }
+    //     }else {
+    //         assert(f==-1);
+    //     }
+    // }
+    // tree.show();
+    tree.deleteAll();
     tree.show();
 }
 void dd_buffer_allocate_new() {
@@ -564,4 +576,4 @@ int main(int argc, char const *argv[]) {
     dd_delete();
     return 0;
 }
-*/
+#endif
