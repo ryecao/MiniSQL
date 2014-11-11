@@ -18,6 +18,8 @@
 using std::fstream;
 #ifdef LOCAL_TEST
 #define out(x)  std::cout<<#x<<" = "<<x<<std::endl
+#else
+#define out(x)
 #endif
 struct FilePointer {
     FILE *fp;
