@@ -92,7 +92,7 @@ namespace B_Plus_Tree {
             if(t==0)    writeint(K[i].idata,o);
             if(t==1)    writefloat(K[i].fdata,o);
             if(t==2)    writestring(K[i].sdata,tinfo.getStringSize(),o);                
-	       }            
+           }            
         BufferManager BM;
         BM.WriteBlock(bk);
     }        

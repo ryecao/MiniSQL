@@ -1,8 +1,13 @@
 #include "record_manager.h"
 #include "buffer_manager.h"
 #include "block.h"
+#include "table_info.h"
+#include "index_info.h"
+#include "attribute_type.h"
+
 #include <cassert>
 #include <string>
+#include <sstream>
 #define BLOCK_SIZE 4096
 
 struct FileStatus {
@@ -223,22 +228,28 @@ bool RecordManager::FitterTest(const std::vector <AttrType> &data, WhereClause w
 	int pos = datatable.attribute_index(name);
 	AttrType ATT = data[pos]; // target attribute for where_clause
 	std::stringstream stream;
+	AttrType clause;
 	if(ATT.t==0){ // int
 		int v;
 		stream << value;
 		stream >> v;
-		AttrType clause(v);
+		AttrType c(v);
+		clause = c;
 	}
 
 	if(ATT.t==1){ //float
 		double p;
 		stream << value;
 		stream >> p;
-		AttrType clause(p);
+		AttrType c(p);
+		clause = c;
 	}
 	
-	if(ATT.t==2) // string
-		AttrType clause(value);
+	if(ATT.t==2){
+		AttrType c(value);
+		clause = c;
+	} // string
+
 	//compare
 	if(opt=="="){
 		if(ATT == clause)
@@ -446,9 +457,8 @@ std::vector <std::vector<std::string>> RecordManager::SelectRecords(std::vector<
 		unsigned char *c=block.data+pos;
 		std::vector<AttrType> entry = binaryToEntry(c,datatable);
 		std::vector<std::string> each_ret;
-		for(auto k=entry.begin();k!=entry.end();k++){
-			AttrType ATT=entry[k];
-			std::string target = attChangeToString(ATT);
+		for(auto k : entry){
+			std::string target = attChangeToString(k);
 			each_ret.push_back(target);
 		}
 		ret.push_back(each_ret);
@@ -475,9 +485,8 @@ std::vector <std::vector<std::string>> RecordManager::SelectAllRecords(const Tab
 			if(block.data[i]){ //exist data ith
 				std::vector<AttrType> entry = binaryToEntry(c,datatable);
 				std::vector<std::string> each_ret;
-				for(auto k=entry.begin();k!=entry.end();k++){
-					AttrType ATT=entry[k];
-					std::string target = attChangeToString(ATT);
+				for(auto k : entry){
+					std::string target = attChangeToString(k);
 					each_ret.push_back(target);
 				}
 				ret.push_back(each_ret);

@@ -16,7 +16,7 @@ public:
     bool DeleteRecord(const TableInfo &table,const IndexInfo &index, std::string value, int offset);
     bool EmptyIndex(const IndexInfo &index);    
     //return offsets of blocks found.
-    bool FindValue(const TableInfo &table, const std::string index_name, std::string value);
+    bool FindValue(const TableInfo &table, const IndexInfo& index, std::string value);
     std::vector<int> FindRecords(const TableInfo &table,const IndexInfo& index, const WhereClause& where_clause);
 
 };

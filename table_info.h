@@ -74,18 +74,18 @@ public:
     std::vector<std::string> res;
     for (auto it : attribute_info_){
       if (it.second.is_unique()){
-        res.push_back(it.first)
+        res.push_back(it.first);
       }
     }
     return res;
   };
-  int attribute_index(const std::string & attribute_name){
+  int attribute_index(const std::string & attribute_name) const{
     auto i = std::find(attribute_names_ordered_.begin(), attribute_names_ordered_.end(),attribute_name);
     int position= std::distance(attribute_names_ordered_.begin(),i);
     return position;
   };
   std::vector<std::string> attribute_names_ordered() const {return attribute_names_ordered_;};
-  AttributeInfo attribute(const std::string& attribute_name) const { return attribute_info_[attribute_name]; }; //get the attribute's information    
+  AttributeInfo attribute(const std::string& attribute_name) const { return attribute_info_.at(attribute_name); }; //get the attribute's information    
   bool HasAttribute(const std::string& attribute_name) const{ 
     auto search = attribute_info_.find(attribute_name);  
     if (search != attribute_info_.end()){

@@ -1,6 +1,7 @@
 #include "interpreter.h"
 #include "sql_command.h"
 #include "api.h"
+#include "buffer_manager.h"
 #include "catalog_manager.h"
 #include <iostream>
 #include <sstream>
