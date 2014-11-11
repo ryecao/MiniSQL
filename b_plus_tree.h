@@ -1,5 +1,5 @@
 #ifndef B_PLUS_TREE_
-#define B_PLUS_TREE_ value
+#define B_PLUS_TREE_
 
 #include <iostream>
 #include <cstdio>

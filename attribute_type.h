@@ -1,11 +1,11 @@
 #ifndef ATTRIBUTE_TYPE_
-#define ATTRIBUTE_TYPE_ value
+#define ATTRIBUTE_TYPE_
 
 #include <string>
 #include <ostream>
 #include <math.h>
 
-int dcmp(double x) {
+inline int dcmp(double x) {
     return fabs(x)<1e-9 ? 0 : x<0 ? -1 : 1;
 }
 struct AttrType {
@@ -48,12 +48,7 @@ struct AttrType {
         return !(lhs==rhs);
     }    
 };
-std::ostream& operator<<(std::ostream &os,const AttrType &u) {
-    os.precision(6);    int t=u.t;
-    if(t==0)    os<<u.idata;
-    if(t==1)    os<<u.fdata;
-    if(t==2)    os<<u.sdata;
-    return os;
-}
+
+std::ostream& operator<<(std::ostream &os,const AttrType &u);
 
 #endif

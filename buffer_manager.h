@@ -13,6 +13,7 @@
 #include <set>
 #include <string>
 #include <fstream>
+#include "block.h"
 #define WRITE_MODE "a+"
 #define READ_MODE "r"
 using std::fstream;

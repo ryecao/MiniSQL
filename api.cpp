@@ -23,6 +23,7 @@
 #include "index_manager.h"
 #include "table_info.h"
 #include "index_info.h"
+#include "attribute_type.h"
 
 void API::Switcher(SqlCommand* command){
   SqlCommandType command_type = command->command_type();
@@ -108,7 +109,7 @@ Info API::CreateTable(SqlCommandCreateTable* command){
     }
     table.set_attribute_number(attribute_count);
 
-    table.attribute(table.primary_key()).add_index("#pri_" + table_name +"_"+it->first);
+    table.attribute(table.primary_key()).add_index("#pri_" + table_name +"_"+table.primary_key());
     table.set_attribute_names_ordered(command->attribute_names_ordered());
     if(catalog_manager.RegisterTable(table)){
       return Info();
@@ -219,7 +220,7 @@ Info API::DeleteFrom(SqlCommandDeleteFrom* command){
 
       for (auto it : where_clause_with_index){
         IndexInfo index = catalog_manager.GetIndexInfo(it.kColumnName);
-        std::vector<int> offsets_of_a_clause = index_manager.FindRecords(index, it);
+        std::vector<int> offsets_of_a_clause = index_manager.FindRecords(table,index, it);
         std::vector<std::pair<int,int>> results_of_a_clause = record_manager.FindRecordsWithIndex(offsets_of_a_clause, table, it);
         
         if (results.empty()){
@@ -336,7 +337,7 @@ bool CheckUnqiueAndPrimaryKey(const TableInfo& table, const std::vector<std::str
     int attribute_index = table.attribute_index(it);
     
     if (!table.attribute(it).index_names().empty()){//has index
-      std::string index_name = table.attribute(it).index_names.empty().at(0);
+      std::string index_name = table.attribute(it).index_names().at(0);
       IndexInfo index_info(index_name, table.table_name(), it);
       if (index_manager.FindValue(table,index_info,values.at(attribute_index))){ // has value
         return false;
@@ -451,7 +452,7 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
     {
       for (auto it : where_clause_with_index){
         IndexInfo index = catalog_manager.GetIndexInfo(it.kColumnName);
-        std::vector<int> offsets_of_a_clause = index_manager.FindRecords(index, it);
+        std::vector<int> offsets_of_a_clause = index_manager.FindRecords(table,index, it);
         std::vector<std::pair<int,int>> results_of_a_clause = record_manager.FindRecordsWithIndex(offsets_of_a_clause, table, it);
         
         if (results.empty()){
