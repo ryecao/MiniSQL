@@ -118,8 +118,19 @@ SqlCommand* Interpreter::SelectSqlCommand(std::string& command_type, std::string
     sql_command = new SqlCommandExecfile();
   }
   else if (command_type == "insert into"){
+    std::cout<<"type is insert into"<<std::endl;//DEBUG
+
     SqlCommandInsertInto sql_command_insert_into;
     sql_command_insert_into = SqlInsertInto(command_content);
+    //DEBUG
+    std::cout<<"command_type: "<< sql_command_insert_into.command_type()<<std::endl;
+    std::cout<<"table_name: " << sql_command_insert_into.table_name() <<std::endl;
+
+    for (auto it : sql_command_insert_into.values())
+    {
+      std::cout<<"value: "<<it<<std::endl;
+    }
+    //DEBUG
     sql_command = new SqlCommandInsertInto(sql_command_insert_into);
   }
   else if (command_type == "quit" || command_type == "quit;"){
@@ -194,6 +205,9 @@ SqlCommand* Interpreter::ReadInput(){
       command_content = command_content + " " +temp_word;
     }
     SqlCommand* sql_command_pointer = NULL;
+    std::cout<<command_type<<std::endl;//DEBUG
+    std::cout<<command_content<<std::endl;//DEBUG
+
     sql_command_pointer = SelectSqlCommand(command_type, command_content);
     return sql_command_pointer;
   }
@@ -429,15 +443,26 @@ SqlCommandCreateIndex Interpreter::SqlCreateIndex(std::string& command){
   return create_index_command;
 }
 
+inline bool is_float(const std::string & s)
+{
+  std::stringstream ss(s);
+  float f;
+  if (!(ss>>f)){
+    return false;
+  }
+  return true;
+}
+
 inline bool is_number(const std::string & s)
 {
-   if(s.empty() || ((!std::isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false ;
+   if(s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false ;
 
    char * p ;
    strtol(s.c_str(), &p, 10) ;
 
-   return (*p == 0) ;
+   return (*p == 0)||is_float(s) ;
 }
+
 
 //@author: ryecao
 //@brief: 检查 delete from 语句合法性，创建相应语句对象

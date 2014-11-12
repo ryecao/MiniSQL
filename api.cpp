@@ -23,7 +23,6 @@
 #include "index_manager.h"
 #include "table_info.h"
 #include "index_info.h"
-#include "attribute_type.h"
 
 void API::Switcher(SqlCommand* command){
   SqlCommandType command_type = command->command_type();
@@ -107,7 +106,13 @@ Info API::CreateTable(SqlCommandCreateTable* command){
 
       table.add_attribute(single_attribute_info);
     }
+    std::cout<<"attribute_count"<<attribute_count<<std::endl;//DEBUG
+    std::cout<<"attribute_number"<<table.attribute_number()<<std::endl;//DEBUG
+
     table.set_attribute_number(attribute_count);
+
+    std::cout<<"attribute_count"<<attribute_count<<std::endl;//DEBUG
+    std::cout<<"attribute_number"<<table.attribute_number()<<std::endl;//DEBUG
 
     table.attribute(table.primary_key()).add_index("#pri_" + table_name +"_"+table.primary_key());
     table.set_attribute_names_ordered(command->attribute_names_ordered());
@@ -368,14 +373,15 @@ Info API::InsertInto(SqlCommandInsertInto* command){
     error_info = "Table \"" + table_name + "\" not exists.";
     return Info(error_info);
   }
-
   TableInfo table = catalog_manager.GetTableInfo(table_name);
+  std::cout<<"api 377:attribute number befor insert record: "<<table.attribute_number()<<std::endl; //DEBUG
   if (table.attribute_names_ordered().size()!=values.size()){
     return Info("Number of values not equals to the number of attributes");
   }
   if (!CheckUnqiueAndPrimaryKey(table,values)){
     return Info("Violation of uniqueness");
   }
+  std::cout<<"attribute number befor insert record: "<<table.attribute_number()<<std::endl; //DEBUG
   offset = record_manager.InsertRecord(table,values);
   if (offset == -1){
     return Info("Insert failed");

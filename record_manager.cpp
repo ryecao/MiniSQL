@@ -103,9 +103,10 @@ int getEntrySize(const TableInfo &datatable){
 	std::vector<std::string> ordered = datatable.attribute_names_ordered();
 	auto dataInfo = datatable.all_attributes();		
 	int res = 0;
+    std::cout<<"attribute_number_getEntrySize: "<<datatable.attribute_number()<<std::endl;//DEBUG
 	for (int i=0;i<datatable.attribute_number();i++) {
 		std::string target=ordered[i];
-		AttributeInfo ATT = dataInfo[target];
+		AttributeInfo ATT = dataInfo.at(target);
 		res += ATT.length();
 	}
 	return res;
@@ -126,15 +127,21 @@ void RecordManager::loadBlockStatus(const std::string &filename) {
 }
 
 bool RecordManager::FitinTable(const std::vector<AttrType> &entry, const TableInfo &datatable){//  compare the attribute type with input and target table
-	if (entry.size() != datatable.attribute_number()) 
+	if (entry.size() != datatable.attribute_number()){
+		std::cout<<"rm 131:entry.size() != datatable.attribute_number()"<<std::endl;//DEBUG		
 		return false;
+	} 
 	std::vector<std::string> ordered = datatable.attribute_names_ordered(); // attributes without sort
 	auto dataInfo = datatable.all_attributes();							// the whole map<std::string,AttributeInfo>
 	for (int i=0;i<entry.size();i++){
 		std::string target=ordered[i];
 		AttributeInfo ATT = dataInfo[target];
-		if (entry[i].t != ATT.type()) 
-			return false;
+		if (ATT.type() != 2){
+			if (entry[i].t != ATT.type()) {
+				std::cout<<"rm 140: entry[i].t: "<<entry[i].t<<"ATT.type()"<<ATT.type()<<std::endl;//DEBUG		
+				return false;
+			}
+		}
 	}
 	return true;
 }
@@ -286,6 +293,8 @@ bool RecordManager::FitterTest(const std::vector <AttrType> &data, WhereClause w
 
 int RecordManager::InsertRecord(const TableInfo &datatable, const std::vector<std::string>& values){
 	std::string filename=datatable.table_name()+".db";
+	std::cout<<"attribute_number_InsertRecord: "<<datatable.attribute_number()<<std::endl;//DEBUG
+
 	std::vector<AttrType> entry = ChangetoAttr(values);
 	if(!FitinTable(entry,datatable)) // attribute dismatch
 		return -1;
@@ -330,6 +339,7 @@ int RecordManager::InsertRecord(const TableInfo &datatable, const std::vector<st
 	auto dataInfo = datatable.all_attributes();							
 	T.WriteBlock(block);
 	blockStatus[filename][offset]++;
+	std::cout<<"rm 342"<<std::endl;//DEBUG
 	return offset;
 }
 

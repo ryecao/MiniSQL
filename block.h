@@ -4,7 +4,7 @@
 #include <string>
 #include <cstdlib>
 #include <cstring>
-const int BLOCK_SIZE=50;
+const int BLOCK_SIZE=4096;
 class Block {
 public:    
     Block():    pos(0)  {}    

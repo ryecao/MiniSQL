@@ -127,7 +127,6 @@ TableInfo CatalogManager::GetTableInfo(const std::string &table_name){
       std::stringstream line_stream(line);
       line_stream >> table_name_in_file >> attribute_number;
       table.set_table_name(table_name_in_file);
-      table.set_attribute_number(attribute_number);
       flag++;
     }
     else{
