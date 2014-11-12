@@ -215,7 +215,7 @@ std::vector<AttrType> ChangetoAttr(const std::vector<std::string>& values,const 
 	for(int i=0;i<values.size();i++){	
 		target=values[i];
 		std::string mask = ordered[i];
-		AttributeInfo ATT = dataInfo[target];
+		AttributeInfo ATT = dataInfo[mask];
 		if(ATT.type()==2){  // deal with '1234' as string instead of int
 			AttrType temp(target);
 			res.push_back(temp);
