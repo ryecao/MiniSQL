@@ -207,11 +207,21 @@ std::vector <AttrType> RecordManager::binaryToEntry(unsigned char *c,const Table
 	return res;
 }
 
-std::vector<AttrType> ChangetoAttr(const std::vector<std::string>& values){
+std::vector<AttrType> ChangetoAttr(const std::vector<std::string>& values,const TableInfo &datatable){
 	std::vector<AttrType> res;
 	std::string target;
+	std::vector<std::string> ordered = datatable.attribute_names_ordered();
+	auto dataInfo = datatable.all_attributes();	
 	for(int i=0;i<values.size();i++){	
 		target=values[i];
+		std::string mask = ordered[i];
+		AttributeInfo ATT = dataInfo[target];
+		if(ATT.type()==2){  // deal with '1234' as string instead of int
+			AttrType temp(target);
+			res.push_back(temp);
+			continue;
+		}
+
 		if(is_Int(target)){
 			AttrType temp(change_Int(target));
 			res.push_back(temp);
@@ -295,7 +305,7 @@ int RecordManager::InsertRecord(const TableInfo &datatable, const std::vector<st
 	std::string filename=datatable.table_name()+".db";
 	std::cout<<"attribute_number_InsertRecord: "<<datatable.attribute_number()<<std::endl;//DEBUG
 
-	std::vector<AttrType> entry = ChangetoAttr(values);
+	std::vector<AttrType> entry = ChangetoAttr(values,datatable);
 	if(!FitinTable(entry,datatable)) // attribute dismatch
 		return -1;
 	loadBlockStatus(filename);
