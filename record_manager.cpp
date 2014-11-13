@@ -386,7 +386,6 @@ bool RecordManager::DeleteRecords(std::vector<std::pair<int,int>>& offsets, cons
 		int capacity = BLOCK_SIZE/(totalSize+1);
 
 		int tuple = (pos-capacity)/totalSize; // the ith tuple start with capacity + i*totalSize
-		std::cout<<"rm 389: tuple: "<<tuple<<std::endl;
 		if(block.data[tuple]==0){ // no exist
 			success=false;
 			continue;
