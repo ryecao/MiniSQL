@@ -15,7 +15,7 @@ struct FileStatus {
 	int fileSize;
 };
 
-std::map <std::string,std::map <int,int> >  blockStatus;
+std::map <std::string,std::map <int,int> >  blockStatus;  // filename,offset,count
 
 RecordManager:: ~RecordManager(){
 	for (auto it=blockStatus.begin();it!=blockStatus.end();it++) {
@@ -319,8 +319,8 @@ int RecordManager::InsertRecord(const TableInfo &datatable, const std::vector<st
 	BufferManager T;
 	if(offset==-1){
 		block=T.AllocateNewBlock(filename);
-		offset=block.pos;
-		blockStatus[filename][offset]=0;
+		offset=block.offset;
+		blockStatus[filename][offset]=0;  // count = 0
 	}
 	else{
 		block=T.GetBlock(filename,offset);
@@ -337,14 +337,9 @@ int RecordManager::InsertRecord(const TableInfo &datatable, const std::vector<st
 	}
 	assert(Find);
 
-	std:: string tablename = datatable.table_name();
-	while (*(tablename.end()-1)!='.')
-		tablename.erase(tablename.end()-1);
-	tablename.erase(tablename.end()-1);			
-	std::vector<std::string> ordered = datatable.attribute_names_ordered(); 
-	auto dataInfo = datatable.all_attributes();							
+	std:: string tablename = datatable.table_name();						
 	T.WriteBlock(block);
-	blockStatus[filename][offset]++;
+	blockStatus[filename][offset]++; // count++
 	std::cout<<"rm 342"<<std::endl;//DEBUG
 	return offset;
 }
@@ -434,9 +429,12 @@ bool RecordManager::DeleteRecords(std::vector<std::pair<int,int>> offsets, const
 		int capacity = BLOCK_SIZE/(totalSize+1);
 
 		int tuple = (pos-capacity)/totalSize; // the ith tuple start with capacity + i*totalSize
-		if(block.data[tuple]==0) // no exist
+		if(block.data[tuple]==0){ // no exist
 			success=false;
+			continue;
+		}
 		block.data[tuple]=0; // lazy erase, only erase the label of tuple
+		blockStatus[filename][offset]--; // count in offset - 1
 	}
 	return success;
 }
@@ -531,6 +529,9 @@ bool RecordManager::DeleteAllRecords(const TableInfo& datatable){
 				opt=true;
 			block.data[i]=0; //erase
 		}
+
+		blockStatus[filename][offset] = 0; // erase all records in offset, count = 0
 	}
+
 	return opt;
 }
