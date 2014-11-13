@@ -10,6 +10,7 @@
 
 class RecordManager{
 public:
+    ~RecordManager();
   //@brief: insert into 语句
   //@params: 插入表的信息; 插入的值.
   //@return: offset
