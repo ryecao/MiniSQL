@@ -17,11 +17,8 @@ struct FileStatus {
 
 std::map <std::string,std::map <int,int> >  blockStatus;
 
-class blockStatusSaver{
-public:
-	blockStatusSaver() {}
-	~blockStatusSaver() {
-		for (auto it=blockStatus.begin();it!=blockStatus.end();it++) {
+RecordManager:: ~RecordManager(){
+	for (auto it=blockStatus.begin();it!=blockStatus.end();it++) {
 			std::string fileName=it->first;
 			FILE *fp=fopen((fileName+".blockinfo").c_str(),"w");
 			for (auto i=blockStatus[fileName].begin();i!=blockStatus[fileName].end();i++) {
@@ -29,8 +26,7 @@ public:
 			}
 			fclose(fp);
 		}
-	}
-}BSS;
+}
 
 bool is_Int(std::string s){
 	int st=0;
