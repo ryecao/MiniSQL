@@ -74,7 +74,7 @@ float change_Float(std::string s){
 		st++;
 		negative=true;
 	}
-	int s1;
+	int s1=0;
 	double s2=0.0,ori=1.0;
 	bool dot=false;
 	for(int i=st;i<s.length();i++){
