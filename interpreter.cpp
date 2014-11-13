@@ -150,6 +150,9 @@ SqlCommand* Interpreter::ReadInput(){
   LowerCase(first_word);
 
   command_type = first_word;
+  if (first_word == "quit;"){
+    std::exit(1);
+  }
   if (first_word.back()==';'){
       is_command_type_valid = false;
       SqlCommand* sc = NULL;
@@ -218,7 +221,17 @@ SqlCommand* Interpreter::ReadInput(std::stringstream& read_command_stream){
   LowerCase(first_word);
 
   command_type = first_word;
-  
+  if (first_word == "quit;"){
+    std::exit(1);
+  }
+  if (first_word.back()==';'){
+      is_command_type_valid = false;
+      SqlCommand* sc = NULL;
+      SqlCommandCreateTable sct;
+      sct.set_command_type(kSqlInvalid);
+      sc = new SqlCommandCreateTable(sct);
+      return sc;
+  }
   if(first_word != "select" && first_word != "quit" && first_word != "quit;" && first_word != "execfile" ){
     read_command_stream >> second_word;
     LowerCase(second_word);
