@@ -96,7 +96,7 @@ public:
     Block GetBlock(const std::string &fname,int offset);  //return the block in file '${fname}' start at ${pos}
     void WriteBlock(const Block &);               //save the block's data
     void FreeBlock(const Block &);                //delete a block
-    void ClearFile(const std::string &fname);   //delete all block in file fname
+    bool ClearFile(const std::string &fname);   //delete all block in file fname
     void PinBlock(const Block &);                   
     void ReleasePinBlock(const Block &);
     void Flush();

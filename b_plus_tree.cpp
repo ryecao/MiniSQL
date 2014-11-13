@@ -109,10 +109,10 @@ namespace B_Plus_Tree {
         b+=sizeof(int);
         return x;
     }
-    double Node::readfloat(unsigned char*&b) {
-        double x;
-        memcpy(&x,b,sizeof(double));
-        b+=sizeof(double);
+    float Node::readfloat(unsigned char*&b) {
+        float x;
+        memcpy(&x,b,sizeof(float));
+        b+=sizeof(float);
         return x;
     }
     string Node::readstring(unsigned char*&b,int len) {
@@ -125,9 +125,9 @@ namespace B_Plus_Tree {
         memcpy(b,&x,sizeof(int));
         b+=sizeof(int);
     }
-    void Node::writefloat(double x,unsigned char *&b) {
-        memcpy(b,&x,sizeof(double));
-        b+=sizeof(double);
+    void Node::writefloat(float x,unsigned char *&b) {
+        memcpy(b,&x,sizeof(float));
+        b+=sizeof(float);
     }
     void Node::writestring(string x,int len,unsigned char *&b) {
         memcpy(b,x.c_str(),x.length());

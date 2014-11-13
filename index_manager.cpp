@@ -27,7 +27,7 @@ bool IndexManager::CreateIndex(std::string type, int size, const IndexInfo &inde
 }
 
 bool IndexManager::CreateIndex(int type, int size, const IndexInfo &index){
-  std::string file_name = index.name();
+  std::string file_name = index.name() + ".index";
   IndexTypeInfo index_type_info(size, type, size);
   B_Plus_Tree::BPTree bpt(file_name, index_type_info);
   return true;

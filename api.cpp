@@ -37,7 +37,7 @@ void API::Switcher(SqlCommand* command){
     case kSqlInsertInto: { info = InsertInto(dynamic_cast<SqlCommandInsertInto *>(command)); break; }
     case kSqlSelectFrom: { info = SelectFrom(dynamic_cast<SqlCommandSelectFrom *>(command));break; }
   }
-  
+
   info.PrintInfo();
 }
 
@@ -49,7 +49,7 @@ Info API::CreateTable(SqlCommandCreateTable* command){
   std::string primary_key = command->primary_key();
   std::vector<std::string> unique_keys = command->unique();
   int attribute_count = 0;
-  
+
   //判断表是否存在
   if(catalog_manager.HasTable(table_name)){
     std::string error_info;
@@ -89,6 +89,7 @@ Info API::CreateTable(SqlCommandCreateTable* command){
       //判断是否是 primary_key
       if(it->first == primary_key){
         single_attribute_info.set_is_primary_key(true);
+        single_attribute_info.add_index("#pri_" + table_name +"_"+it->first);
         index_manager.CreateIndex(it->second.first,it->second.second,IndexInfo("#pri_" + table_name +"_"+it->first,table_name,it->first));
         catalog_manager.RegisterIndex(IndexInfo("#pri_" + table_name +"_"+it->first,table_name,it->first));
       }
@@ -114,7 +115,6 @@ Info API::CreateTable(SqlCommandCreateTable* command){
     std::cout<<"attribute_count"<<attribute_count<<std::endl;//DEBUG
     std::cout<<"attribute_number"<<table.attribute_number()<<std::endl;//DEBUG
 
-    table.attribute(table.primary_key()).add_index("#pri_" + table_name +"_"+table.primary_key());
     table.set_attribute_names_ordered(command->attribute_names_ordered());
     if(catalog_manager.RegisterTable(table)){
       return Info();
@@ -143,10 +143,15 @@ Info API::CreateIndex(SqlCommandCreateIndex* command){
     return Info(error_info);
   }
   TableInfo table = catalog_manager.GetTableInfo(table_name);
-  
+
   if(!table.HasAttribute(attribute_name)){
     std::string error_info;
     error_info = "attribute \"" + attribute_name + "\" not exists.";
+    return Info(error_info);
+  }
+  if (!table.attribute(attribute_name).is_unique() && !table.attribute(attribute_name).is_primary_key()){
+    std::string error_info;
+    error_info = "attribute \"" + attribute_name + "\" is not an unique attribute.";
     return Info(error_info);
   }
   else{
@@ -158,7 +163,7 @@ Info API::CreateIndex(SqlCommandCreateIndex* command){
         return Info("Register Index failed.");
       }
       //update table info in catalog manager
-      table.attribute(attribute_name).add_index(index_name);
+      table.add_index(attribute_name, index_name);
       catalog_manager.WriteTableInfo(table);
       return Info();
     }
@@ -172,7 +177,7 @@ Info API::DeleteFrom(SqlCommandDeleteFrom* command){
   CatalogManager catalog_manager;
   IndexManager index_manager;
   RecordManager record_manager;
-  
+
   bool delete_all_records = command->delete_all_records();
   std::string table_name = command->table_name();
   std::vector<WhereClause> where_clause = command->where_clause();
@@ -189,7 +194,7 @@ Info API::DeleteFrom(SqlCommandDeleteFrom* command){
       std::string error_info;
       error_info = "attribute \"" + it.kColumnName + "\"in where clause \""+ it.kColumnName + it.kOperator + it.kCondition +"\" not exists.";
       return Info(error_info);
-    }   
+    }
   }
 
   if (delete_all_records){
@@ -218,16 +223,17 @@ Info API::DeleteFrom(SqlCommandDeleteFrom* command){
       }
     }
 
-    std::vector<std::pair<int,int>> results;    
+    std::vector<std::pair<int,int>> results;
 
     if (!where_clause_with_index.empty()) //条件里有属性有 index
     {
 
       for (auto it : where_clause_with_index){
-        IndexInfo index = catalog_manager.GetIndexInfo(it.kColumnName);
+        std::string index_name = table.attribute(it.kColumnName).index_names().at(0);
+        IndexInfo index = catalog_manager.GetIndexInfo(index_name);
         std::vector<int> offsets_of_a_clause = index_manager.FindRecords(table,index, it);
         std::vector<std::pair<int,int>> results_of_a_clause = record_manager.FindRecordsWithIndex(offsets_of_a_clause, table, it);
-        
+
         if (results.empty()){
           results = results_of_a_clause;
         }
@@ -252,19 +258,23 @@ Info API::DeleteFrom(SqlCommandDeleteFrom* command){
         }
       }
     }
-
-    if(!record_manager.DeleteRecords(results, table)){
+    auto records = record_manager.SelectRecords(results, table);
+    int ret = record_manager.DeleteRecords(results, table);
+    if(!ret){
       return Info("Delete records failed.");
     }
     else{
-      auto records = record_manager.SelectRecords(results, table);
       auto index_names = table.index_names();
       int pair_index = 0;
       for (auto it : records){
         for (auto i : index_names){
           IndexInfo index_info = catalog_manager.GetIndexInfo(i);
-          if(!index_manager.DeleteRecord(table, index_info, it.at(table.attribute_index(i)), results.at(pair_index).first)){
-            return Info("Delete record in index \"" + index_info.name() + "on attribute \"" + index_info.attribute_name() 
+          auto index = table.attribute_index(index_info.attribute_name());
+          std::string value = it.at(index);
+          int offset_i = results.at(pair_index).first;
+          bool ret = index_manager.DeleteRecord(table, index_info, value, offset_i);
+          if(!ret){
+            return Info("Delete record in index \"" + index_info.name() + "on attribute \"" + index_info.attribute_name()
                         +"\" of table \"" + index_info.table_name() + "\"failed.");
           }
         }
@@ -286,7 +296,7 @@ Info API::DropTable(SqlCommandDropTable* command){
   }
   else{
     TableInfo table = catalog_manager.GetTableInfo(table_name);
-    
+
     if (catalog_manager.DropTable(table_name)){
         //drop index
         for (auto it : table.index_names()){
@@ -340,7 +350,7 @@ bool CheckUnqiueAndPrimaryKey(const TableInfo& table, const std::vector<std::str
 
   for (auto it : attributes_to_be_checked){
     int attribute_index = table.attribute_index(it);
-    
+
     if (!table.attribute(it).index_names().empty()){//has index
       std::string index_name = table.attribute(it).index_names().at(0);
       IndexInfo index_info(index_name, table.table_name(), it);
@@ -374,14 +384,12 @@ Info API::InsertInto(SqlCommandInsertInto* command){
     return Info(error_info);
   }
   TableInfo table = catalog_manager.GetTableInfo(table_name);
-  std::cout<<"api 377:attribute number befor insert record: "<<table.attribute_number()<<std::endl; //DEBUG
   if (table.attribute_names_ordered().size()!=values.size()){
     return Info("Number of values not equals to the number of attributes");
   }
   if (!CheckUnqiueAndPrimaryKey(table,values)){
     return Info("Violation of uniqueness");
   }
-  std::cout<<"attribute number befor insert record: "<<table.attribute_number()<<std::endl; //DEBUG
   offset = record_manager.InsertRecord(table,values);
   if (offset == -1){
     return Info("Insert failed");
@@ -410,7 +418,6 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
   std::vector<std::string> column_names = command->column_names();
   std::string table_name = command->table_name();
   std::vector<WhereClause> where_clause = command->where_clause();
-  
   if (!catalog_manager.HasTable(table_name)){
     std::string error_info;
     error_info = "Table \"" + table_name + "\" not exists.";
@@ -419,6 +426,9 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
 
   TableInfo table = catalog_manager.GetTableInfo(table_name);
 
+  if (column_names.empty()){
+    column_names = table.attribute_names_ordered();
+  }
   for (auto it : column_names){
     if(!table.HasAttribute(it)){
       std::string error_info;
@@ -432,13 +442,13 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
       std::string error_info;
       error_info = "attribute \"" + it.kColumnName + "\"in where clause \""+it.kColumnName + it.kOperator + it.kCondition +"\" not exists.";
       return Info(error_info);
-    }   
+    }
   }
 
-  std::vector<std::pair<int,int> > results;    
+  std::vector<std::pair<int,int> > results;
   std::vector<std::vector<std::string> > records;
   if (select_all_records){
-    records = record_manager.SelectRecords(results, table);
+    records = record_manager.SelectAllRecords(table);
   }
   else{
     std::vector<WhereClause> where_clause_with_index;
@@ -457,10 +467,12 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
     if (!where_clause_with_index.empty()) //条件里有属性有 index
     {
       for (auto it : where_clause_with_index){
-        IndexInfo index = catalog_manager.GetIndexInfo(it.kColumnName);
+        std::cout<<"api 462: it.kColumnName: "<<it.kColumnName<<std::endl;//DEBUG
+        std::string index_name = table.attribute(it.kColumnName).index_names().at(0);
+        IndexInfo index = catalog_manager.GetIndexInfo(index_name);
         std::vector<int> offsets_of_a_clause = index_manager.FindRecords(table,index, it);
         std::vector<std::pair<int,int>> results_of_a_clause = record_manager.FindRecordsWithIndex(offsets_of_a_clause, table, it);
-        
+
         if (results.empty()){
           results = results_of_a_clause;
         }
@@ -490,7 +502,7 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
 
   //print table
   for (auto it : column_names){
-    std::cout<<"+ " << std::setw(10) << "-" <<" ";
+    std::cout<<"+" << "------------";
   }
 
   std::cout<<"+"<<std::endl;
@@ -502,7 +514,7 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
   std::cout<<"|"<<std::endl;
 
   for (auto it : column_names){
-    std::cout<<"+ "<< std::setw(10) << "-" <<" ";
+    std::cout<<"+" << "------------";
   }
   std::cout<<"+"<<std::endl;
 
@@ -522,7 +534,7 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
   }
 
   for (auto it : column_names){
-    std::cout<<"+ " << std::setw(10) << "-" <<" ";
+    std::cout<<"+" << "------------";
   }
 
   std::cout<<"+"<<std::endl;

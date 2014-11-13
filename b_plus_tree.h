@@ -73,10 +73,10 @@ namespace B_Plus_Tree {
         std::vector<int> P;
         std::vector<AttrType> K;
         int readint(unsigned char*&b);
-        double readfloat(unsigned char*&b);
+        float readfloat(unsigned char*&b);
         string readstring(unsigned char*&b,int len);
         void writeint(int x,unsigned char *&b);
-        void writefloat(double x,unsigned char *&b);
+        void writefloat(float x,unsigned char *&b);
         void writestring(string x,int len,unsigned char *&b);
     };
 

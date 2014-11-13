@@ -92,7 +92,7 @@ void BufferManager::FreeBlock(const Block &b) {
     }
     fm.AddFreeBlock(b);
 }
-void BufferManager::ClearFile(const std::string &fname) {
+bool BufferManager::ClearFile(const std::string &fname) {
     fm.ClearAllBlock(fname);
     auto f=FPServer.find(fname);
     if(f!=FPServer.end()) {
@@ -105,7 +105,13 @@ void BufferManager::ClearFile(const std::string &fname) {
             pool.erase(it++);
         else    ++it;
     }
-    remove(fname.c_str());
+    
+    if(remove(fname.c_str())){
+        return false;
+    }
+    else{
+        return true;
+    }
 }
 BufferManager::~BufferManager() {    
 }

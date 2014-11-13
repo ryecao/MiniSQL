@@ -15,13 +15,10 @@ struct FileStatus {
 	int fileSize;
 };
 
-std::map <std::string,std::map <int,int> >  blockStatus;
+std::map <std::string,std::map <int,int> >  blockStatus;  // filename,offset,count
 
-class blockStatusSaver{
-public:
-	blockStatusSaver() {}
-	~blockStatusSaver() {
-		for (auto it=blockStatus.begin();it!=blockStatus.end();it++) {
+RecordManager:: ~RecordManager(){
+	for (auto it=blockStatus.begin();it!=blockStatus.end();it++) {
 			std::string fileName=it->first;
 			FILE *fp=fopen((fileName+".blockinfo").c_str(),"w");
 			for (auto i=blockStatus[fileName].begin();i!=blockStatus[fileName].end();i++) {
@@ -29,8 +26,7 @@ public:
 			}
 			fclose(fp);
 		}
-	}
-}BSS;
+}
 
 bool is_Int(std::string s){
 	int st=0;
@@ -57,53 +53,10 @@ bool is_Float(std::string s){
 	return true;
 }
 
-int change_Int(std::string s){
-	bool negative=false;
-	int st=0;
-	if(s[0]=='-'){	
-		st++;
-		negative=true;
-	}
-	int sum=0;
-	for(int i=st;i<s.length();i++)
-		sum=sum*10+int(s[i]-'0');
-	if(negative)	sum=-sum;
-	return sum;
-}
-
-float change_Float(std::string s){
-	bool negative=false;
-	int st=0;
-	if(s[0]=='-'){	
-		st++;
-		negative=true;
-	}
-	int s1;
-	double s2=0.0,ori=1.0;
-	bool dot=false;
-	for(int i=st;i<s.length();i++){
-		if(s[i]=='.'){
-			dot=true;
-			continue;
-		}
-		if(!dot)	
-			s1=s1*10+int(s[i]-'0');
-		else{
-			double opt=double(s[i]-'0');
-			ori=ori/10.0;
-			opt=opt*ori;
-			s2=s2+opt;
-		}
-	}
-	s2=s2+1.0*s1;
-	return (float)s2;
-}
-
 int getEntrySize(const TableInfo &datatable){
 	std::vector<std::string> ordered = datatable.attribute_names_ordered();
-	auto dataInfo = datatable.all_attributes();		
+	auto dataInfo = datatable.all_attributes();
 	int res = 0;
-    std::cout<<"attribute_number_getEntrySize: "<<datatable.attribute_number()<<std::endl;//DEBUG
 	for (int i=0;i<datatable.attribute_number();i++) {
 		std::string target=ordered[i];
 		AttributeInfo ATT = dataInfo.at(target);
@@ -113,7 +66,7 @@ int getEntrySize(const TableInfo &datatable){
 }
 
 void RecordManager::loadBlockStatus(const std::string &filename) {
-	if (blockStatus.find(filename)!=blockStatus.end()) 
+	if (blockStatus.find(filename)!=blockStatus.end())
 		return ;
 
 	FILE *fplist=fopen((filename+".blockinfo").c_str(),"r");
@@ -128,9 +81,9 @@ void RecordManager::loadBlockStatus(const std::string &filename) {
 
 bool RecordManager::FitinTable(const std::vector<AttrType> &entry, const TableInfo &datatable){//  compare the attribute type with input and target table
 	if (entry.size() != datatable.attribute_number()){
-		std::cout<<"rm 131:entry.size() != datatable.attribute_number()"<<std::endl;//DEBUG		
+		std::cout<<"rm 131:entry.size() != datatable.attribute_number()"<<std::endl;//DEBUG
 		return false;
-	} 
+	}
 	std::vector<std::string> ordered = datatable.attribute_names_ordered(); // attributes without sort
 	auto dataInfo = datatable.all_attributes();							// the whole map<std::string,AttributeInfo>
 	for (int i=0;i<entry.size();i++){
@@ -138,7 +91,7 @@ bool RecordManager::FitinTable(const std::vector<AttrType> &entry, const TableIn
 		AttributeInfo ATT = dataInfo[target];
 		if (ATT.type() != 2){
 			if (entry[i].t != ATT.type()) {
-				std::cout<<"rm 140: entry[i].t: "<<entry[i].t<<"ATT.type()"<<ATT.type()<<std::endl;//DEBUG		
+				std::cout<<"rm 140: entry[i].t: "<<entry[i].t<<"ATT.type()"<<ATT.type()<<std::endl;//DEBUG
 				return false;
 			}
 		}
@@ -153,8 +106,8 @@ void RecordManager::entryToBinary(const std::vector<AttrType> &entry, unsigned c
 	auto dataInfo = datatable.all_attributes();
 	for (int i=0;i<entry.size();i++) {
 		switch (entry[i].t) {
-		case 0: memcpy(c,&entry[i].idata,sizeof(entry[i].idata));c+=sizeof(entry[i].idata);break;
-		case 1: memcpy(c,&entry[i].fdata,sizeof(entry[i].fdata));c+=sizeof(entry[i].fdata);break;
+		case 0: memcpy(c,&entry[i].idata,sizeof(int));c+=sizeof(int);break;
+		case 1: memcpy(c,&entry[i].fdata,sizeof(float));c+=sizeof(float);break;
 		case 2: {
 			memcpy(c,entry[i].sdata.c_str(),entry[i].sdata.length());
 			std::string target=ordered[i];
@@ -164,7 +117,7 @@ void RecordManager::entryToBinary(const std::vector<AttrType> &entry, unsigned c
 		}
 		default:assert(0);
 		}
-	} 
+	}
 }
 
 static int fetchInt(const unsigned char *loc) {
@@ -189,15 +142,15 @@ static std::string fetchString(const unsigned char *loc,int len) {
 std::vector <AttrType> RecordManager::binaryToEntry(unsigned char *c,const TableInfo &datatable) {
 	std::vector <AttrType> res;
 	std::vector<std::string> ordered = datatable.attribute_names_ordered();
-	auto dataInfo = datatable.all_attributes();		
+	auto dataInfo = datatable.all_attributes();
 	for (int i=0;i<datatable.attribute_number();i++) {
 		std::string target=ordered[i];
 		AttributeInfo ATT = dataInfo[target];
 		switch(ATT.type()) {
-			case 0:res.push_back(fetchInt(c));c+=sizeof(int);break;
-			case 1:res.push_back(fetchFloat(c));c+=sizeof(float);break;
+			case 0:res.push_back(AttrType(fetchInt(c)));c+=sizeof(int);break;
+			case 1:res.push_back(AttrType(fetchFloat(c)));c+=sizeof(float);break;
 			case 2:{
-				res.push_back(fetchString(c,ATT.length()));
+				res.push_back(AttrType(fetchString(c,ATT.length())));
 				c+=ATT.length();
 				break;
 			}
@@ -211,8 +164,8 @@ std::vector<AttrType> ChangetoAttr(const std::vector<std::string>& values,const 
 	std::vector<AttrType> res;
 	std::string target;
 	std::vector<std::string> ordered = datatable.attribute_names_ordered();
-	auto dataInfo = datatable.all_attributes();	
-	for(int i=0;i<values.size();i++){	
+	auto dataInfo = datatable.all_attributes();
+	for(int i=0;i<values.size();i++){
 		target=values[i];
 		std::string mask = ordered[i];
 		AttributeInfo ATT = dataInfo[mask];
@@ -223,12 +176,12 @@ std::vector<AttrType> ChangetoAttr(const std::vector<std::string>& values,const 
 		}
 
 		if(is_Int(target)){
-			AttrType temp(change_Int(target));
+			AttrType temp(std::stoi(target));
 			res.push_back(temp);
 			continue;
 		}
 		if(is_Float(target)){
-			AttrType temp(change_Float(target));
+			AttrType temp(std::stof(target));
 			res.push_back(temp);
 			continue;
 		}
@@ -255,13 +208,13 @@ bool RecordManager::FitterTest(const std::vector <AttrType> &data, WhereClause w
 	}
 
 	if(ATT.t==1){ //float
-		double p;
+		float p;
 		stream << value;
 		stream >> p;
 		AttrType c(p);
 		clause = c;
 	}
-	
+
 	if(ATT.t==2){
 		AttrType c(value);
 		clause = c;
@@ -272,7 +225,7 @@ bool RecordManager::FitterTest(const std::vector <AttrType> &data, WhereClause w
 		if(ATT == clause)
 			return true;
 	}
-	
+
 	if(opt=="<"){
 		if(ATT < clause)
 				return true;
@@ -303,7 +256,6 @@ bool RecordManager::FitterTest(const std::vector <AttrType> &data, WhereClause w
 
 int RecordManager::InsertRecord(const TableInfo &datatable, const std::vector<std::string>& values){
 	std::string filename=datatable.table_name()+".db";
-	std::cout<<"attribute_number_InsertRecord: "<<datatable.attribute_number()<<std::endl;//DEBUG
 
 	std::vector<AttrType> entry = ChangetoAttr(values,datatable);
 	if(!FitinTable(entry,datatable)) // attribute dismatch
@@ -323,8 +275,8 @@ int RecordManager::InsertRecord(const TableInfo &datatable, const std::vector<st
 	BufferManager T;
 	if(offset==-1){
 		block=T.AllocateNewBlock(filename);
-		offset=block.pos;
-		blockStatus[filename][offset]=0;
+		offset=block.offset;
+		blockStatus[filename][offset]=0;  // count = 0
 	}
 	else{
 		block=T.GetBlock(filename,offset);
@@ -333,8 +285,8 @@ int RecordManager::InsertRecord(const TableInfo &datatable, const std::vector<st
 	bool Find=false;
 	for (int i=0;i<capacity;i++) {
 		if (!block.data[i]) {	// add capacity_size first ,then add each tuple. example:[1][2][3][tuple1][tuple2][tuple3]
-			entryToBinary(entry, block.data + capacity + i*totalSize, datatable);  
-			Find=true;  
+			entryToBinary(entry, block.data + capacity + i*totalSize, datatable);
+			Find=true;
 			block.data[i]=true;
 			break;
 		}
@@ -342,18 +294,12 @@ int RecordManager::InsertRecord(const TableInfo &datatable, const std::vector<st
 	assert(Find);
 
 	std:: string tablename = datatable.table_name();
-	while (*(tablename.end()-1)!='.')
-		tablename.erase(tablename.end()-1);
-	tablename.erase(tablename.end()-1);			
-	std::vector<std::string> ordered = datatable.attribute_names_ordered(); 
-	auto dataInfo = datatable.all_attributes();							
 	T.WriteBlock(block);
-	blockStatus[filename][offset]++;
-	std::cout<<"rm 342"<<std::endl;//DEBUG
+	blockStatus[filename][offset]++; // count++
 	return offset;
 }
 
-std::vector<std::pair<int,int>> RecordManager::FindRecordsWithIndex(const std::vector<int> offsets, const TableInfo& datatable,WhereClause where_clause){
+std::vector<std::pair<int,int>> RecordManager::FindRecordsWithIndex(const std::vector<int>& offsets, const TableInfo& datatable,WhereClause where_clause){
 	std::vector<std::pair<int,int>> ret;
 	std::string filename = datatable.table_name()+".db";
 	loadBlockStatus(filename);
@@ -364,10 +310,11 @@ std::vector<std::pair<int,int>> RecordManager::FindRecordsWithIndex(const std::v
 		int offset = offsets[i];
 		Block block = T.GetBlock(filename,offset);
 		int capacity = BLOCK_SIZE/(totalSize+1);
-		
+
 		unsigned char *c=block.data+capacity;
 		for(int k=0;k<capacity;k++){
 			if(block.data[k]){ //exist data kth
+			std::cout<<"rm 321: data["<<k<<"]: "<< block.data[k]<<std::endl;
 				std::vector<AttrType> entry = binaryToEntry(c,datatable);
 				if(FitterTest(entry,where_clause,datatable))
 					ret.push_back( std::make_pair(offset,capacity + k*totalSize) );   //example:[1][2][3][tuple1][tuple2][tuple3] start from 0
@@ -395,6 +342,7 @@ std::vector<std::pair<int,int>> RecordManager::FindRecordsWithNoIndex(const Tabl
 		unsigned char *c=block.data+capacity;
 		for(int k=0;k<capacity;k++){
 			if(block.data[k]){ //exist data kth
+			std::cout<<"rm 349: data["<<k<<"]: "<< block.data[k]<<std::endl;
 				std::vector<AttrType> entry = binaryToEntry(c,datatable);
 				if(FitterTest(entry,where_clause,datatable))
 					ret.push_back( std::make_pair(offset,capacity + k*totalSize) );   //example:[1][2][3][tuple1][tuple2][tuple3] start from 0
@@ -405,7 +353,7 @@ std::vector<std::pair<int,int>> RecordManager::FindRecordsWithNoIndex(const Tabl
 	return ret;
 }
 
-std::vector<std::pair<int,int>> RecordManager::RecordsFilter(std::vector<std::pair<int,int>> record,const TableInfo& datatable,WhereClause where_clause){
+std::vector<std::pair<int,int>> RecordManager::RecordsFilter(std::vector<std::pair<int,int>>& record,const TableInfo& datatable,WhereClause where_clause){
 	std::vector<std::pair<int,int>> ret;
 	std::string filename = datatable.table_name()+".db";
 	loadBlockStatus(filename);
@@ -424,7 +372,7 @@ std::vector<std::pair<int,int>> RecordManager::RecordsFilter(std::vector<std::pa
 	return ret;
 }
 
-bool RecordManager::DeleteRecords(std::vector<std::pair<int,int>> offsets, const TableInfo& datatable){
+bool RecordManager::DeleteRecords(std::vector<std::pair<int,int>>& offsets, const TableInfo& datatable){
 	bool success =true;
 	std::string filename = datatable.table_name()+".db";
 	loadBlockStatus(filename);
@@ -438,9 +386,14 @@ bool RecordManager::DeleteRecords(std::vector<std::pair<int,int>> offsets, const
 		int capacity = BLOCK_SIZE/(totalSize+1);
 
 		int tuple = (pos-capacity)/totalSize; // the ith tuple start with capacity + i*totalSize
-		if(block.data[tuple]==0) // no exist
+		std::cout<<"rm 389: tuple: "<<tuple<<std::endl;
+		if(block.data[tuple]==0){ // no exist
 			success=false;
+			continue;
+		}
 		block.data[tuple]=0; // lazy erase, only erase the label of tuple
+		blockStatus[filename][offset]--; // count in offset - 1
+		T.WriteBlock(block);
 	}
 	return success;
 }
@@ -458,12 +411,12 @@ std::string attChangeToString(AttrType x){
 		stream << x.fdata;
 		stream >> result;
 		return result;
-	}	
+	}
 
-	return x.sdata; // x.t==2 
+	return x.sdata; // x.t==2
 }
 
-std::vector <std::vector<std::string>> RecordManager::SelectRecords(std::vector<std::pair<int,int>> offsets, const TableInfo &datatable){
+std::vector <std::vector<std::string>> RecordManager::SelectRecords(std::vector<std::pair<int,int>>& offsets, const TableInfo &datatable){
 	std::vector<std::vector<std::string>> ret;
 	std::string filename = datatable.table_name()+".db";
 	loadBlockStatus(filename);
@@ -473,7 +426,7 @@ std::vector <std::vector<std::string>> RecordManager::SelectRecords(std::vector<
 		int offset = it->first;
 		int pos = it->second;
 		Block block = T.GetBlock(filename,offset);
-		
+
 		unsigned char *c=block.data+pos;
 		std::vector<AttrType> entry = binaryToEntry(c,datatable);
 		std::vector<std::string> each_ret;
@@ -499,7 +452,7 @@ std::vector <std::vector<std::string>> RecordManager::SelectAllRecords(const Tab
 			continue;
 		Block block = T.GetBlock(filename,offset);
 		int capacity = BLOCK_SIZE/(totalSize+1);
-		
+
 		unsigned char *c=block.data+capacity;
 		for(int i=0;i<capacity;i++){
 			if(block.data[i]){ //exist data ith
@@ -535,6 +488,10 @@ bool RecordManager::DeleteAllRecords(const TableInfo& datatable){
 				opt=true;
 			block.data[i]=0; //erase
 		}
+
+		blockStatus[filename][offset] = 0; // erase all records in offset, count = 0
+		T.WriteBlock(block);
 	}
+
 	return opt;
 }

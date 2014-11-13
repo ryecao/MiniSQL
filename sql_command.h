@@ -26,7 +26,7 @@ enum SqlCommandType
   kSqlCreateIndex,
   kSqlDeleteFrom,
   kSqlDropTable,
-  kSqlDropIndex,  
+  kSqlDropIndex,
   kSqlExecfile,
   kSqlInsertInto,
   kSqlQuit,
@@ -40,7 +40,7 @@ struct WhereClause
 {
   std::string kColumnName; //列名
   std::string kOperator; //算数比较符
-  std::string kCondition; //条件 
+  std::string kCondition; //条件
 };
 
 //@author: ryecao
@@ -96,7 +96,7 @@ public:
   };
   virtual std::string index_name() const{};
   virtual std::string column_name() const{};
-  
+
   virtual std::string table_name() const { return  table_name_; };
   virtual std::string primary_key() const { return  primary_key_; };
   virtual std::vector<std::string> unique() const { return unique_; };
@@ -158,7 +158,7 @@ public:
   void set_table_name(std::string& table_name) { table_name_ = table_name; };
   void set_where_clause(WhereClause& where_clause) { where_clause_.push_back(where_clause); };
   void set_delete_all_records(bool delete_all_records) { delete_all_records_ = delete_all_records; };
-  
+
   virtual std::string index_name() const{};
   virtual std::string column_name() const{};
   virtual std::string primary_key() const{};
@@ -228,7 +228,7 @@ public:
   virtual std::string index_name() const { return index_name_; };
 private:
   std::string index_name_;
-  
+
 };
 
 class SqlCommandExecfile : public SqlCommand
@@ -306,7 +306,7 @@ public:
   virtual std::vector<std::string> attribute_names_ordered() const{};
 
   virtual bool select_all_records() const{ return select_all_records_; };
-  virtual bool select_all_columns() const { return select_all_columns_; };  
+  virtual bool select_all_columns() const { return select_all_columns_; };
   virtual std::vector<std::string> column_names() const { return column_names_; };
   virtual std::string table_name() const { return table_name_; };
   virtual std::vector<WhereClause> where_clause() const { return where_clause_; };

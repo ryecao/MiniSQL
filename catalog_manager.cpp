@@ -6,6 +6,7 @@
 #include "catalog_manager.h"
 #include "table_info.h"
 #include "index_info.h"
+#include "buffer_manager.h"
 
 bool CatalogManager::HasTable(const std::string &table_name){
   std::string file_name;
@@ -73,17 +74,6 @@ bool CatalogManager::RegisterTable(const TableInfo &table){
     file_table_out<<std::endl;
   }
 
-  // for (auto it = attributes.begin(); it != attributes.end(); ++it){
-  //   file_table_out << it->first << " " << it->second.type() << " " << it->second.length() <<" "
-  //                  << it->second.is_unique() << " " << it->second.is_primary_key() << " ";
-  //   std::vector<std::string> index_names = it->second.index_names();
-
-  //   for (auto &iter : index_names){
-  //     file_table_out<< iter <<" ";
-  //   }
-  //   file_table_out<<std::endl;
-  // }
-
   file_table_out.close();
   return true;
 }
@@ -94,13 +84,34 @@ void CatalogManager::WriteTableInfo(const TableInfo& table){
 
 bool CatalogManager::DropTable(const std::string &table_name){
   std::string file_name = table_name + "_t.cata";
+  std::string file_name_db = table_name + ".db";
+  std::string file_name_db_bf = table_name + ".db.blockinfo";
+  std::string file_name_db_fi = table_name + ".db.freeinfo";
+
   const char* file_name_cc = file_name.c_str();
-  if (std::remove(file_name_cc) == 0){
-    return true;
-  }
-  else{
+  const char* file_name_db_cc = file_name_db.c_str();
+  const char* file_name_db_bf_cc = file_name_db_bf.c_str();
+  const char* file_name_db_fi_cc = file_name_db_fi.c_str();
+
+  BufferManager bm;
+
+  if(!bm.ClearFile(file_name_db_fi_cc)){
+    std::cout<<"Remove .db.freeinfo faild"<<std::endl;//DEBUG
     return false;
   }
+  if(!bm.ClearFile(file_name_db_bf_cc)){
+    std::cout<<"Remove .db.blockinfo faild"<<std::endl;//DEBUG
+    return false;
+  } 
+  if(!bm.ClearFile(file_name_db_cc)){
+    std::cout<<"Remove .db failed"<<std::endl;//DEBUG
+    return false;
+  }
+  if (!bm.ClearFile(file_name_cc)){
+    return false;
+  } 
+
+  return true;
 }
 
 TableInfo CatalogManager::GetTableInfo(const std::string &table_name){
@@ -161,14 +172,36 @@ bool CatalogManager::RegisterIndex(const IndexInfo& index){
 }
 
 bool CatalogManager::DropIndex(const std::string &index_name){
-  std::string file_name = index_name + "_i.cata";
-  const char *file_name_cc = file_name.c_str();
-  if (std::remove(file_name_cc) == 0){
-    return true;
-  }
-  else{
+  std::string file_name_i = index_name + ".index";
+  std::string file_name_ibi = index_name + ".index.btree.info";
+  std::string file_name_if = index_name + ".index.freeinfo";
+  std::string file_name_ic = index_name + "_i.cata";
+
+  const char *file_name_i_cc = file_name_i.c_str();
+  const char *file_name_ibi_cc = file_name_ibi.c_str();
+  const char *file_name_if_cc = file_name_if.c_str();
+  const char *file_name_ic_cc = file_name_ic.c_str();
+  
+  BufferManager bm;
+
+  if (!bm.ClearFile(file_name_i)){
+    std::cout<<"Remove .index faild"<<std::endl;//DEBUG
     return false;
   }
+  if(!bm.ClearFile(file_name_ibi)){
+    std::cout<<"Remove .index.btree.info faild"<<std::endl;//DEBUG
+    return false;
+  }
+  if(!bm.ClearFile(file_name_if)){
+    std::cout<<"Remove .index.freeinfo faild"<<std::endl;//DEBUG
+    return false;
+  } 
+  if(!bm.ClearFile(file_name_ic)){
+    std::cout<<"Remove .i.cata faild"<<std::endl;//DEBUG
+    return false;
+  }
+
+  return true;
 }
 
 IndexInfo CatalogManager::GetIndexInfo(const std::string &index_name){

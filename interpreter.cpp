@@ -118,19 +118,10 @@ SqlCommand* Interpreter::SelectSqlCommand(std::string& command_type, std::string
     sql_command = new SqlCommandExecfile();
   }
   else if (command_type == "insert into"){
-    std::cout<<"type is insert into"<<std::endl;//DEBUG
 
     SqlCommandInsertInto sql_command_insert_into;
     sql_command_insert_into = SqlInsertInto(command_content);
-    //DEBUG
-    std::cout<<"command_type: "<< sql_command_insert_into.command_type()<<std::endl;
-    std::cout<<"table_name: " << sql_command_insert_into.table_name() <<std::endl;
 
-    for (auto it : sql_command_insert_into.values())
-    {
-      std::cout<<"value: "<<it<<std::endl;
-    }
-    //DEBUG
     sql_command = new SqlCommandInsertInto(sql_command_insert_into);
   }
   else if (command_type == "quit" || command_type == "quit;"){
@@ -205,8 +196,6 @@ SqlCommand* Interpreter::ReadInput(){
       command_content = command_content + " " +temp_word;
     }
     SqlCommand* sql_command_pointer = NULL;
-    std::cout<<command_type<<std::endl;//DEBUG
-    std::cout<<command_content<<std::endl;//DEBUG
 
     sql_command_pointer = SelectSqlCommand(command_type, command_content);
     return sql_command_pointer;
