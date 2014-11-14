@@ -78,7 +78,7 @@ std::string Interpreter::CommandContentPreProcess(std::string& command_content){
   ReplacePartInString(command_content, "="," = ");
   ReplacePartInString(command_content, "<"," < ");
   ReplacePartInString(command_content, ">  ="," >= ");
-  ReplacePartInString(command_content, "<  ="," >= ");
+  ReplacePartInString(command_content, "<  ="," <= ");
   ReplacePartInString(command_content, "! ="," != ");
   
   return command_content;

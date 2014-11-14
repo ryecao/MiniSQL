@@ -37,10 +37,7 @@ void API::Switcher(SqlCommand* command){
     case kSqlInsertInto: { info = InsertInto(dynamic_cast<SqlCommandInsertInto *>(command)); break; }
     case kSqlSelectFrom: { info = SelectFrom(dynamic_cast<SqlCommandSelectFrom *>(command));break; }
   }
-  if (command_type!=kSqlSelectFrom)
-  {
-    info.PrintInfo();
-  }
+  info.PrintInfo();
 }
 
 Info API::CreateTable(SqlCommandCreateTable* command){
@@ -218,7 +215,7 @@ Info API::DeleteFrom(SqlCommandDeleteFrom* command){
     std::vector<WhereClause> where_clause_without_index;
 
     for (auto it : where_clause){
-      if (table.attribute(it.kColumnName).is_primary_key()){
+      if (!table.attribute(it.kColumnName).index_names().empty() && it.kOperator != "!="){
         where_clause_with_index.push_back(it);
       }
       else{
@@ -536,7 +533,7 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
     std::vector<WhereClause> where_clause_without_index;
 
     for (auto it : where_clause){
-      if (table.attribute(it.kColumnName).is_primary_key()){
+      if (!table.attribute(it.kColumnName).index_names().empty() && it.kOperator != "!="){
         where_clause_with_index.push_back(it);
       }
       else{

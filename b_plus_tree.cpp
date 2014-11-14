@@ -416,7 +416,7 @@ namespace B_Plus_Tree {
         Block b=BM.GetBlock(fname,k);
         Node u(b);
         for(int i=0;i<u.KSize();++i) if(u.getK(i)==V) {
-            puts("Find to erase");
+            //puts("Find to erase");
             bool f=delete_entry(b,V,u.getP(i));
             return 1;
         }

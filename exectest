@@ -1,0 +1,9 @@
+create table t2(f1 char(8), f2 int, f3 float, primary key(f1));
+insert into t2 values('aaa',1111,111.1);
+insert into t2 values('bbb',11531,1121.1);
+insert into t2 values('bbc',611,111.123);
+insert into t2 values('ccc',1236,3411.1);
+insert into t2 values('ccd',11231,123111.1);
+insert into t2 values('ddf',1461,1211.1);
+insert into t2 values('fff',611,1111.1);
+select * from t2;
