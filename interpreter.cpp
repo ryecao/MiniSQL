@@ -445,12 +445,17 @@ SqlCommandCreateIndex Interpreter::SqlCreateIndex(std::string& command){
   return create_index_command;
 }
 
-inline bool is_float(const std::string & s)
-{
-  std::stringstream ss(s);
-  float f;
-  if (!(ss>>f)){
-    return false;
+bool is_float(std::string s){
+  int st=0;
+  if(s[0]=='-') st++;
+  bool dot=false;
+  for(int i=st;i<s.length();i++){
+    if(s[i]=='.' && !dot){
+      dot=true;
+      continue;
+    }
+    if( !(s[i]>='0' && s[i]<='9') )
+      return false;
   }
   return true;
 }
@@ -610,6 +615,7 @@ void Interpreter::SqlExecfile(std::string& command){
       api.Switcher(ReadInput(read_command_stream));      
     }
   }
+  file.close();
   //std::exit(1);
 }
 

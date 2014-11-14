@@ -1,3 +1,16 @@
+// @copyright (c) 2014 ryecao
+// @license: MIT
+// @author(s): ryecao/ryecao@gmail.com
+// created by ryecao on Sept. 28, 2014
+//
+// MiniSQL
+// A course project for Database System Design, Fall 2014 @Zhejiang Univ.
+//
+// @file:index_manager.cpp
+// @brief: used to manage the indices of the databases.
+//
+// please compile with -std=c++11
+
 #include <string>
 #include <vector>
 #include "index_manager.h"

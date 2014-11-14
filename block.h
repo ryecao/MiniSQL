@@ -1,3 +1,16 @@
+// @copyright (c) 2014 sodabeta
+// @license: MIT
+// @author(s): sodabeta/rxzxx0723@gmail.com
+// created by sodabeta , Nov. , 2014
+//
+// MiniSQL
+// A course project for Database System Design, Fall 2014 @Zhejiang Univ.
+//
+// @file: block.h
+// @brief: block defined used by buffer manager.
+//
+// please compile with -std=c++11
+
 #ifndef BLOCK_H_
 #define BLOCK_H_ 
 

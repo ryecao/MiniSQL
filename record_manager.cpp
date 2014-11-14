@@ -5,6 +5,19 @@
 #include "index_info.h"
 #include "attribute_type.h"
 
+// @copyright (c) 2014 Chenhenghong, ryecao 
+// @license: MIT
+// @author(s): Chenhenghong/450901669@qq.com, ryecao/ryecao@gmail.com 
+// created by ryecao on Sept. 28, 2014
+//
+// MiniSQL
+// A course project for Database System Design, Fall 2014 @Zhejiang Univ.
+//
+// @file:record_manager.cpp
+// @brief: used to handle insertion, search and deletion.
+//
+// @!:please compile with -std=c++11
+
 #include <cassert>
 #include <string>
 #include <sstream>
@@ -81,7 +94,7 @@ void RecordManager::loadBlockStatus(const std::string &filename) {
 
 bool RecordManager::FitinTable(const std::vector<AttrType> &entry, const TableInfo &datatable){//  compare the attribute type with input and target table
 	if (entry.size() != datatable.attribute_number()){
-		std::cout<<"rm 131:entry.size() != datatable.attribute_number()"<<std::endl;//DEBUG
+		std::cout<<"Error: entry.size() != datatable.attribute_number()"<<std::endl;//DEBUG
 		return false;
 	}
 	std::vector<std::string> ordered = datatable.attribute_names_ordered(); // attributes without sort
@@ -90,9 +103,10 @@ bool RecordManager::FitinTable(const std::vector<AttrType> &entry, const TableIn
 		std::string target=ordered[i];
 		AttributeInfo ATT = dataInfo[target];
 		if (ATT.type() != 2){
-			if (entry[i].t != ATT.type()) {
-				std::cout<<"rm 140: entry[i].t: "<<entry[i].t<<"ATT.type()"<<ATT.type()<<std::endl;//DEBUG
-				return false;
+			if (ATT.type() == 1){
+				if (entry[i].t !=0 && entry[i].t !=1){
+					return false;
+				} 	
 			}
 		}
 	}
@@ -175,13 +189,14 @@ std::vector<AttrType> ChangetoAttr(const std::vector<std::string>& values,const 
 			continue;
 		}
 
-		if(is_Int(target)){
-			AttrType temp(std::stoi(target));
+		if (ATT.type()==1){
+			AttrType temp(std::stof(target));
 			res.push_back(temp);
 			continue;
 		}
-		if(is_Float(target)){
-			AttrType temp(std::stof(target));
+
+		if (ATT.type()==0){
+			AttrType temp(std::stoi(target));
 			res.push_back(temp);
 			continue;
 		}
@@ -386,6 +401,7 @@ bool RecordManager::DeleteRecords(std::vector<std::pair<int,int>>& offsets, cons
 		int capacity = BLOCK_SIZE/(totalSize+1);
 
 		int tuple = (pos-capacity)/totalSize; // the ith tuple start with capacity + i*totalSize
+		std::cout<<"rm 389: tuple: "<<tuple<<std::endl;
 		if(block.data[tuple]==0){ // no exist
 			success=false;
 			continue;

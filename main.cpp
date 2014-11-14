@@ -1,3 +1,15 @@
+// @copyright (c) 2014 ryecao, sodabeta, Chenhenghong
+// @license: MIT
+// @author(s): ryecao/ryecao@gmail.com, sodabeta/rxzxx0723@gmail.com, Chenhenghong/450901669@qq.com
+// created by ryecao on Sept. 28, 2014
+//
+// MiniSQL
+// A course project for Database System Design, Fall 2014 @Zhejiang Univ.
+//
+// @file:main.cpp
+//
+// @!:please compile with -std=c++11
+
 #include "interpreter.h"
 #include "sql_command.h"
 #include "api.h"

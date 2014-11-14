@@ -1,3 +1,16 @@
+// @copyright (c) 2014 ryecao
+// @license: MIT
+// @author(s): ryecao/ryecao@gmail.com
+// created by ryecao on Sept. 28, 2014
+//
+// MiniSQL
+// A course project for Database System Design, Fall 2014 @Zhejiang Univ.
+//
+// @file:catalog_manager.h
+// @brief: used to manage the meta data of the databases.
+//
+// please compile with -std=c++11
+
 #ifndef CATALOG_MANAGER_
 #define CATALOG_MANAGER_
 

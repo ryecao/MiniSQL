@@ -1,3 +1,16 @@
+// @copyright (c) 2014 sodabeta, ryecao
+// @license: MIT
+// @author(s): sodabeta/rxzxx0723@gmail.com, ryecao/ryecao@gmail.com
+// created by sodabeta , Oct. , 2014
+//
+// MiniSQL
+// A course project for Database System Design, Fall 2014 @Zhejiang Univ.
+//
+// @file:index_info.h
+// @brief: used to store index information.
+//
+// please compile with -std=c++11
+
 #ifndef INDEX_INFO_
 #define INDEX_INFO_ 
 

@@ -37,8 +37,10 @@ void API::Switcher(SqlCommand* command){
     case kSqlInsertInto: { info = InsertInto(dynamic_cast<SqlCommandInsertInto *>(command)); break; }
     case kSqlSelectFrom: { info = SelectFrom(dynamic_cast<SqlCommandSelectFrom *>(command));break; }
   }
-
-  info.PrintInfo();
+  if (command_type!=kSqlSelectFrom)
+  {
+    info.PrintInfo();
+  }
 }
 
 Info API::CreateTable(SqlCommandCreateTable* command){
@@ -58,6 +60,11 @@ Info API::CreateTable(SqlCommandCreateTable* command){
   }
   else{
     table.set_table_name(table_name);
+
+    //Check primary key.
+    if (primary_key.empty()){
+      return Info("Must assign a primary key.");   
+    }
 
     std::map<std::string, std::pair<std::string,int>> attributes = command->attribute();
     for (auto it = attributes.begin(); it != attributes.end(); ++it){
@@ -107,13 +114,9 @@ Info API::CreateTable(SqlCommandCreateTable* command){
 
       table.add_attribute(single_attribute_info);
     }
-    std::cout<<"attribute_count"<<attribute_count<<std::endl;//DEBUG
-    std::cout<<"attribute_number"<<table.attribute_number()<<std::endl;//DEBUG
 
     table.set_attribute_number(attribute_count);
 
-    std::cout<<"attribute_count"<<attribute_count<<std::endl;//DEBUG
-    std::cout<<"attribute_number"<<table.attribute_number()<<std::endl;//DEBUG
 
     table.set_attribute_names_ordered(command->attribute_names_ordered());
     if(catalog_manager.RegisterTable(table)){
@@ -296,15 +299,16 @@ Info API::DropTable(SqlCommandDropTable* command){
   }
   else{
     TableInfo table = catalog_manager.GetTableInfo(table_name);
+    
+    for (auto it : table.index_names()){
+      SqlCommandDropIndex* cmd = new SqlCommandDropIndex(it);
+        if(!DropIndex(cmd).is_succeed()){
+          return Info("Drop table success but index \"" + it +"\" failed to be dropped");
+        }
+    }
 
     if (catalog_manager.DropTable(table_name)){
         //drop index
-        for (auto it : table.index_names()){
-          SqlCommandDropIndex* cmd = new SqlCommandDropIndex(it);
-          if(!DropIndex(cmd).is_succeed()){
-            return Info("Drop table success but index \"" + it +"\" failed to be dropped");
-          }
-        }
       return Info();
     }
     else{
@@ -315,6 +319,7 @@ Info API::DropTable(SqlCommandDropTable* command){
 
 Info API::DropIndex(SqlCommandDropIndex* command){
   CatalogManager catalog_manager;
+  IndexManager index_manager;
   std::string index_name = command->index_name();
 
   if (!catalog_manager.HasIndex(index_name)){
@@ -326,11 +331,11 @@ Info API::DropIndex(SqlCommandDropIndex* command){
     IndexInfo index = catalog_manager.GetIndexInfo(index_name);
     std::string table_name = index.table_name();
     std::string attribute_name = index.attribute_name();
-
+    index_manager.EmptyIndex(index);
     if (catalog_manager.DropIndex(index_name)){
       //update table info
       TableInfo table = catalog_manager.GetTableInfo(table_name);
-      table.attribute(attribute_name).remove_index(index_name);
+      table.remove_index(attribute_name,index_name);
       catalog_manager.WriteTableInfo(table);
       return Info();
     }
@@ -371,6 +376,31 @@ bool CheckUnqiueAndPrimaryKey(const TableInfo& table, const std::vector<std::str
   return true;
 }
 
+bool is_int_overflow_notchecked(std::string s){
+  int st=0;
+  if(s[0]=='-') st++;
+  for(int i=st;i<s.length();i++){
+    if( !(s[i]>='0' && s[i]<='9') )
+      return false;
+  }
+  return true;
+}
+
+bool is_float_overflow_notchecked(std::string s){
+  int st=0;
+  if(s[0]=='-') st++;
+  bool dot=false;
+  for(int i=st;i<s.length();i++){
+    if(s[i]=='.' && !dot){
+      dot=true;
+      continue;
+    }
+    if( !(s[i]>='0' && s[i]<='9') )
+      return false;
+  }
+  return true;
+}
+
 Info API::InsertInto(SqlCommandInsertInto* command){
   CatalogManager catalog_manager;
   RecordManager record_manager;
@@ -390,6 +420,54 @@ Info API::InsertInto(SqlCommandInsertInto* command){
   if (!CheckUnqiueAndPrimaryKey(table,values)){
     return Info("Violation of uniqueness");
   }
+
+  auto ano = table.attribute_names_ordered();
+
+  //Check string length and overflow
+  for (int i = 0; i<values.size(); ++i){
+    int type = table.attribute(ano.at(i)).type();
+    int length = table.attribute(ano.at(i)).length();
+    if (type == 0){
+      if (!is_int_overflow_notchecked(values.at(i))){
+        std::string error_info;
+        error_info = "Value \"" + values.at(i)  + "\" is not a int number.";
+        return Info(error_info);
+      }
+      try{
+        int v = std::stoi(values.at(i));
+      }
+      catch(std::out_of_range& e){
+        std::string error_info;
+        error_info = "Value \"" + values.at(i)  + "\" is out of range of int.";
+        return Info(error_info);
+      }
+    }
+    if (type == 1){
+      if (!is_float_overflow_notchecked(values.at(i))&&!is_int_overflow_notchecked(values.at(i))){
+        std::string error_info;
+        error_info = "Value \"" + values.at(i)  + "\" is not a float number.";
+        return Info(error_info);
+      }
+
+      try{
+        float v = std::stof(values.at(i));
+      }
+      catch(std::out_of_range& e){
+        std::string error_info;
+        error_info = "Value \"" + values.at(i)  + "\" is out of range of float.";
+        return Info(error_info);
+      }
+    }
+    if (type == 2){
+      if (values.at(i).length() > length){
+        std::string error_info;
+        error_info = "Value \"" + values.at(i)  + "\" is out of range of char("+ std::to_string(length) +").";
+        return Info(error_info);
+      }
+    }
+
+  }
+
   offset = record_manager.InsertRecord(table,values);
   if (offset == -1){
     return Info("Insert failed");
@@ -502,19 +580,19 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
 
   //print table
   for (auto it : column_names){
-    std::cout<<"+" << "------------";
+    std::cout<<"+" << "--------------";
   }
 
   std::cout<<"+"<<std::endl;
   //表头
   for (auto it : column_names){
-    std::cout<<"| " << std::setw(10) << it <<" ";
+    std::cout<<"| " << std::setw(12) << it <<" ";
   }
 
   std::cout<<"|"<<std::endl;
 
   for (auto it : column_names){
-    std::cout<<"+" << "------------";
+    std::cout<<"+" << "--------------";
   }
   std::cout<<"+"<<std::endl;
 
@@ -528,13 +606,13 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
   //print records
   for (auto it : records){
     for (auto i : index){
-      std::cout<<"| "<<std::setw(10) << it.at(i)<<" ";
+      std::cout<<"| "<<std::setw(12) << it.at(i)<<" ";
     }
     std::cout<<"|"<<std::endl;
   }
 
   for (auto it : column_names){
-    std::cout<<"+" << "------------";
+    std::cout<<"+" << "--------------";
   }
 
   std::cout<<"+"<<std::endl;

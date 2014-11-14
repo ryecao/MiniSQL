@@ -1,3 +1,16 @@
+// @copyright (c) 2014 ryecao
+// @license: MIT
+// @author(s): ryecao/ryecao@gmail.com
+// created by ryecao on Sept. 28, 2014
+//
+// MiniSQL
+// A course project for Database System Design, Fall 2014 @Zhejiang Univ.
+//
+// @file:catalog_manager.cpp
+// @brief: used to manage the meta data of the databases.
+//
+// please compile with -std=c++11
+
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -52,7 +65,14 @@ bool CatalogManager::HasAttribute(const std::string &table_name, const std::stri
 bool CatalogManager::RegisterTable(const TableInfo &table){
   std::string table_name = table.table_name();
   std::string file_name = table_name + "_t.cata";
+  std::string file_name_db = table_name + ".db";
+  std::string file_name_db_bf = table_name + ".db.blockinfo";
+  std::string file_name_db_fi = table_name + ".db.freeinfo";
+
   std::ofstream file_table_out(file_name, std::ios::binary);
+  std::ofstream file_table_out_db(file_name_db, std::ios::binary);
+  std::ofstream file_table_out_db_bf(file_name_db_bf, std::ios::binary);
+  std::ofstream file_table_out_db_fi(file_name_db_fi, std::ios::binary);
 
   if (!file_table_out){
     return false;
@@ -74,7 +94,6 @@ bool CatalogManager::RegisterTable(const TableInfo &table){
     file_table_out<<std::endl;
   }
 
-  file_table_out.close();
   return true;
 }
 
@@ -95,10 +114,10 @@ bool CatalogManager::DropTable(const std::string &table_name){
 
   BufferManager bm;
 
-  if(!bm.ClearFile(file_name_db_fi_cc)){
-    std::cout<<"Remove .db.freeinfo faild"<<std::endl;//DEBUG
-    return false;
-  }
+  // if(!bm.ClearFile(file_name_db_fi_cc)){
+  //   std::cout<<"Remove .db.freeinfo faild"<<std::endl;//DEBUG
+  //   return false;
+  // }
   if(!bm.ClearFile(file_name_db_bf_cc)){
     std::cout<<"Remove .db.blockinfo faild"<<std::endl;//DEBUG
     return false;
@@ -107,7 +126,7 @@ bool CatalogManager::DropTable(const std::string &table_name){
     std::cout<<"Remove .db failed"<<std::endl;//DEBUG
     return false;
   }
-  if (!bm.ClearFile(file_name_cc)){
+  if (remove(file_name_cc)){
     return false;
   } 
 
@@ -152,6 +171,7 @@ TableInfo CatalogManager::GetTableInfo(const std::string &table_name){
   }
 
   table.set_attribute_names_ordered(attribute_names_ordered);
+
   return table;
 }
 
@@ -167,13 +187,12 @@ bool CatalogManager::RegisterIndex(const IndexInfo& index){
   
   file_index_out << index_name << " " << index.table_name() << " " << index.attribute_name() <<std::endl;
   
-  file_index_out.close();  
   return true;
 }
 
 bool CatalogManager::DropIndex(const std::string &index_name){
   std::string file_name_i = index_name + ".index";
-  std::string file_name_ibi = index_name + ".index.btree.info";
+  std::string file_name_ibi = index_name + ".index.btree_info";
   std::string file_name_if = index_name + ".index.freeinfo";
   std::string file_name_ic = index_name + "_i.cata";
 
@@ -192,11 +211,11 @@ bool CatalogManager::DropIndex(const std::string &index_name){
     std::cout<<"Remove .index.btree.info faild"<<std::endl;//DEBUG
     return false;
   }
-  if(!bm.ClearFile(file_name_if)){
-    std::cout<<"Remove .index.freeinfo faild"<<std::endl;//DEBUG
-    return false;
-  } 
-  if(!bm.ClearFile(file_name_ic)){
+  // if(!bm.ClearFile(file_name_if)){
+  //   std::cout<<"Remove .index.freeinfo faild"<<std::endl;//DEBUG
+  //   return false;
+  // } 
+  if(remove(file_name_ic_cc)){
     std::cout<<"Remove .i.cata faild"<<std::endl;//DEBUG
     return false;
   }

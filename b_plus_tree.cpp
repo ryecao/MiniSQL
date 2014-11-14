@@ -1,3 +1,16 @@
+// @copyright (c) 2014 sodabeta
+// @license: MIT
+// @author(s): sodabeta/rxzxx0723@gmail.com
+// created by sodabeta , Nov. , 2014
+//
+// MiniSQL
+// A course project for Database System Design, Fall 2014 @Zhejiang Univ.
+//
+// @file:b_plus_tree.cpp
+// @brief: An implementation of b+ tree
+//
+// please compile with -std=c++11
+
 #include "b_plus_tree.h"
 
 #ifdef LOCAL_TEST

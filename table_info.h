@@ -82,6 +82,10 @@ public:
   void add_index(std::string& attribute_name,std::string index_name){
     attribute_info_.at(attribute_name).add_index(index_name);
   };
+  void remove_index(std::string& attribute_name,std::string index_name){
+    attribute_info_.at(attribute_name).remove_index(index_name);
+  };
+
   int attribute_index(const std::string & attribute_name) const{
     auto i = std::find(attribute_names_ordered_.begin(), attribute_names_ordered_.end(),attribute_name);
     int position= std::distance(attribute_names_ordered_.begin(),i);

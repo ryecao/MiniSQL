@@ -11,6 +11,19 @@
 #include <fstream>
 #include <map>
 #include <set>
+// @copyright (c) 2014 sodabeta
+// @license: MIT
+// @author(s): sodabeta/rxzxx0723@gmail.com
+// created by sodabeta , Nov. , 2014
+//
+// MiniSQL
+// A course project for Database System Design, Fall 2014 @Zhejiang Univ.
+//
+// @file: buffer_manager.cpp
+// @brief: file buffer manager.
+//
+// please compile with -std=c++11
+
 #include <string>
 #include <fstream>
 #include "block.h"
@@ -70,7 +83,7 @@ public:
     }
     void ClearAllBlock(const std::string &fname) {
         auto f=FreeFPServer.find(fname);
-        if(f!=FreeFPServer.end())   FreeFPServer.erase(f);
+        if(f!=FreeFPServer.end()) FreeFPServer.erase(f);
         remove((fname+".freeinfo").c_str());
     }
     void Flush() {

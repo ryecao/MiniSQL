@@ -1,3 +1,16 @@
+// @copyright (c) 2014 sodabeta
+// @license: MIT
+// @author(s): sodabeta/rxzxx0723@gmail.com
+// created by sodabeta , Oct. , 2014
+//
+// MiniSQL
+// A course project for Database System Design, Fall 2014 @Zhejiang Univ.
+//
+// @file:attribute.h
+// @brief: attribute type file.
+//
+// please compile with -std=c++11
+
 #ifndef ATTRIBUTE_TYPE_
 #define ATTRIBUTE_TYPE_
 

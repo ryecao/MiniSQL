@@ -1,3 +1,16 @@
+// @copyright (c) 2014 Chenhenghong, ryecao 
+// @license: MIT
+// @author(s): Chenhenghong/450901669@qq.com, ryecao/ryecao@gmail.com 
+// created by ryecao on Sept. 28, 2014
+//
+// MiniSQL
+// A course project for Database System Design, Fall 2014 @Zhejiang Univ.
+//
+// @file:record_manager.h
+// @brief: used to handle insertion, search and deletion.
+//
+// @!:please compile with -std=c++11
+
 #ifndef RECORD_MANAGER_H_
 #define RECORD_MANAGER_H_
 
