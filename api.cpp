@@ -254,9 +254,11 @@ Info API::DeleteFrom(SqlCommandDeleteFrom* command){
           results = results_of_a_clause;
         }
         else{
+          std::vector<std::pair<int,int> > results_temp;
           std::set_intersection(results.begin(),results.end(),
                                 results_of_a_clause.begin(),results_of_a_clause.end(),
-                                std::back_inserter(results));
+                                std::back_inserter(results_temp));
+          results = results_temp;
         }
       }
 
@@ -572,9 +574,11 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
           results = results_of_a_clause;
         }
         else{
+          std::vector<std::pair<int,int> > results_temp;
           std::set_intersection(results.begin(),results.end(),
                                 results_of_a_clause.begin(),results_of_a_clause.end(),
-                                std::back_inserter(results));
+                                std::back_inserter(results_temp));
+          results = results_temp;
         }
       }
 
