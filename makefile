@@ -26,4 +26,4 @@ clean:
 	del /S minisql.exe
 # Linux
 #   rm -f *.o
-# 	rm -f minisql.exe
+# 	rm -f minisql
