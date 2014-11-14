@@ -329,7 +329,6 @@ std::vector<std::pair<int,int>> RecordManager::FindRecordsWithIndex(const std::v
 		unsigned char *c=block.data+capacity;
 		for(int k=0;k<capacity;k++){
 			if(block.data[k]){ //exist data kth
-			std::cout<<"rm 321: data["<<k<<"]: "<< block.data[k]<<std::endl;
 				std::vector<AttrType> entry = binaryToEntry(c,datatable);
 				if(FitterTest(entry,where_clause,datatable))
 					ret.push_back( std::make_pair(offset,capacity + k*totalSize) );   //example:[1][2][3][tuple1][tuple2][tuple3] start from 0
@@ -357,7 +356,6 @@ std::vector<std::pair<int,int>> RecordManager::FindRecordsWithNoIndex(const Tabl
 		unsigned char *c=block.data+capacity;
 		for(int k=0;k<capacity;k++){
 			if(block.data[k]){ //exist data kth
-			std::cout<<"rm 349: data["<<k<<"]: "<< block.data[k]<<std::endl;
 				std::vector<AttrType> entry = binaryToEntry(c,datatable);
 				if(FitterTest(entry,where_clause,datatable))
 					ret.push_back( std::make_pair(offset,capacity + k*totalSize) );   //example:[1][2][3][tuple1][tuple2][tuple3] start from 0

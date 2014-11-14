@@ -235,6 +235,9 @@ Info API::DeleteFrom(SqlCommandDeleteFrom* command){
         std::string index_name = table.attribute(it.kColumnName).index_names().at(0);
         IndexInfo index = catalog_manager.GetIndexInfo(index_name);
         std::vector<int> offsets_of_a_clause = index_manager.FindRecords(table,index, it);
+        std::sort(offsets_of_a_clause.begin(), offsets_of_a_clause.end());
+        offsets_of_a_clause.erase(std::unique(offsets_of_a_clause.begin(), offsets_of_a_clause.end()), offsets_of_a_clause.end());
+
         std::vector<std::pair<int,int>> results_of_a_clause = record_manager.FindRecordsWithIndex(offsets_of_a_clause, table, it);
 
         if (results.empty()){
@@ -545,10 +548,11 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
     if (!where_clause_with_index.empty()) //条件里有属性有 index
     {
       for (auto it : where_clause_with_index){
-        std::cout<<"api 462: it.kColumnName: "<<it.kColumnName<<std::endl;//DEBUG
         std::string index_name = table.attribute(it.kColumnName).index_names().at(0);
         IndexInfo index = catalog_manager.GetIndexInfo(index_name);
         std::vector<int> offsets_of_a_clause = index_manager.FindRecords(table,index, it);
+        std::sort(offsets_of_a_clause.begin(), offsets_of_a_clause.end());
+        offsets_of_a_clause.erase(std::unique(offsets_of_a_clause.begin(), offsets_of_a_clause.end()), offsets_of_a_clause.end());
         std::vector<std::pair<int,int>> results_of_a_clause = record_manager.FindRecordsWithIndex(offsets_of_a_clause, table, it);
 
         if (results.empty()){
