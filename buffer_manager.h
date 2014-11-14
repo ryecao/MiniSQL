@@ -69,7 +69,7 @@ public:
         fseek(F.fp,0,SEEK_SET);
         bool f=0;
         while(fscanf(F.fp,"%d",&o)==1)    f=1;
-        fclose(F.fp);
+        fclose(F.fp);// add
         return f;
     }
     bool BlockIsFree(const Block &b) {

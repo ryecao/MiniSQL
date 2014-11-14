@@ -23,10 +23,14 @@
 #include "index_manager.h"
 #include "table_info.h"
 #include "index_info.h"
+#include <chrono>
 
 void API::Switcher(SqlCommand* command){
   SqlCommandType command_type = command->command_type();
   Info info;
+  typedef std::chrono::high_resolution_clock Clock;
+  typedef std::chrono::milliseconds milliseconds;
+  Clock::time_point t0 = Clock::now();
   switch(command_type){
     case kSqlInvalid: { info = Info("Invalid Command, Please check your syntax."); break; }
     case kSqlCreateTable: { info = CreateTable(dynamic_cast<SqlCommandCreateTable *>(command)); break; }
@@ -38,6 +42,9 @@ void API::Switcher(SqlCommand* command){
     case kSqlSelectFrom: { info = SelectFrom(dynamic_cast<SqlCommandSelectFrom *>(command));break; }
   }
   info.PrintInfo();
+  Clock::time_point t1 = Clock::now();
+  milliseconds ms = std::chrono::duration_cast<milliseconds>(t1 - t0);
+  std::cout<<"time used:"<<ms.count()<<" ms."<<std::endl;
 }
 
 Info API::CreateTable(SqlCommandCreateTable* command){
@@ -423,9 +430,6 @@ Info API::InsertInto(SqlCommandInsertInto* command){
   if (table.attribute_names_ordered().size()!=values.size()){
     return Info("Number of values not equals to the number of attributes");
   }
-  if (!CheckUnqiueAndPrimaryKey(table,values)){
-    return Info("Violation of uniqueness");
-  }
 
   auto ano = table.attribute_names_ordered();
 
@@ -474,6 +478,11 @@ Info API::InsertInto(SqlCommandInsertInto* command){
     }
 
   }
+
+  if (!CheckUnqiueAndPrimaryKey(table,values)){
+    return Info("Violation of uniqueness");
+  }
+
 
   offset = record_manager.InsertRecord(table,values);
   if (offset == -1){

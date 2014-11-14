@@ -88,7 +88,22 @@ std::string Interpreter::CommandContentPreProcess(std::string& command_content){
 //@brief: 根据 command_type 选择相应的语句生成器
 SqlCommand* Interpreter::SelectSqlCommand(std::string& command_type, std::string& command_content){
   SqlCommand* sql_command = NULL;
-  if (command_type == "create table"){
+  if (command_type == "insert into"){
+    SqlCommandInsertInto sql_command_insert_into;
+    sql_command_insert_into = SqlInsertInto(command_content);
+    sql_command = new SqlCommandInsertInto(sql_command_insert_into);
+  }
+  else if (command_type == "delete from"){
+    SqlCommandDeleteFrom sql_command_delete_from;
+    sql_command_delete_from = SqlDeleteFrom(command_content);
+    sql_command = new SqlCommandDeleteFrom(sql_command_delete_from);
+  }
+  else if (command_type == "select"){
+    SqlCommandSelectFrom sql_command_select_from;
+    sql_command_select_from = SqlSelectFrom(command_content);
+    sql_command = new SqlCommandSelectFrom(sql_command_select_from); 
+  }
+  else if (command_type == "create table"){
     SqlCommandCreateTable sql_command_create_table;
     sql_command_create_table = SqlCreateTable(command_content);
     sql_command = new SqlCommandCreateTable(sql_command_create_table);
@@ -97,11 +112,6 @@ SqlCommand* Interpreter::SelectSqlCommand(std::string& command_type, std::string
     SqlCommandCreateIndex sql_command_create_index;
     sql_command_create_index = SqlCreateIndex(command_content);
     sql_command = new SqlCommandCreateIndex(sql_command_create_index);
-  }
-  else if (command_type == "delete from"){
-    SqlCommandDeleteFrom sql_command_delete_from;
-    sql_command_delete_from = SqlDeleteFrom(command_content);
-    sql_command = new SqlCommandDeleteFrom(sql_command_delete_from);
   }
   else if (command_type == "drop table"){
     SqlCommandDropTable sql_command_drop_table;
@@ -117,20 +127,8 @@ SqlCommand* Interpreter::SelectSqlCommand(std::string& command_type, std::string
     SqlExecfile(command_content);
     sql_command = new SqlCommandExecfile();
   }
-  else if (command_type == "insert into"){
-
-    SqlCommandInsertInto sql_command_insert_into;
-    sql_command_insert_into = SqlInsertInto(command_content);
-
-    sql_command = new SqlCommandInsertInto(sql_command_insert_into);
-  }
   else if (command_type == "quit" || command_type == "quit;"){
     SqlQuit(command_content);
-  }
-  else if (command_type == "select"){
-    SqlCommandSelectFrom sql_command_select_from;
-    sql_command_select_from = SqlSelectFrom(command_content);
-    sql_command = new SqlCommandSelectFrom(sql_command_select_from); 
   }
 
   return sql_command;
@@ -327,6 +325,11 @@ SqlCommandCreateTable Interpreter::SqlCreateTable(std::string& command){
         }
         else if(type == "float"){
           create_table_command.set_attribute(column_name,type,sizeof(float));
+        }
+        else{
+          std::cout<<"Error: \""<<type<<"\" is not a valid type"<<std::endl;
+          create_table_command.set_command_type(kSqlInvalid);
+          return create_table_command;
         }
       }
       else{
