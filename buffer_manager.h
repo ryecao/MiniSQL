@@ -66,11 +66,8 @@ public:
     bool HasFreeBlock(const std::string &fname) {                
         int o;        
         FilePointer F=FPOpenFile(fname+".freeinfo");
-        fseek(F.fp,0,SEEK_SET);
-        bool f=0;
-        while(fscanf(F.fp,"%d",&o)==1)    f=1;
-        fclose(F.fp);// add
-        return f;
+        auto f=FreeFPServer.find(fname);
+        return f!=FreeFPServer.end() && !f->second.empty();
     }
     bool BlockIsFree(const Block &b) {
         auto f=FreeFPServer.find(b.fname);
