@@ -18,7 +18,7 @@
 
 class IndexInfo {
 public:
-  IndexInfo();
+  IndexInfo(){};
   IndexInfo(const std::string &index_name, const std::string &table_name, const std::string &attribute_name)
   {
     name_ = index_name;

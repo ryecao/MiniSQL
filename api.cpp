@@ -141,6 +141,7 @@ Info API::CreateTable(SqlCommandCreateTable* command){
 Info API::CreateIndex(SqlCommandCreateIndex* command){
   IndexManager index_manager;
   CatalogManager catalog_manager;
+  RecordManager record_manager;
   std::string index_name = command->index_name();
   std::string attribute_name = command->column_name();
   std::string table_name = command->table_name();
@@ -171,6 +172,13 @@ Info API::CreateIndex(SqlCommandCreateIndex* command){
     IndexInfo index_info(index_name, table_name, attribute_name);
     //create index in index manager
     if(index_manager.CreateIndex(table.attribute(attribute_name).type(),table.attribute(attribute_name).length(), index_info)){
+      auto all_records = record_manager.SelectAllRecords(table);
+
+      for (auto record : all_records){
+          if(!index_manager.AddRecord(table,index_info,record.first.at(table.attribute_index(index_info.attribute_name())),record.second)){
+          return Info("Update index failed.");
+        }
+      }
       if (!catalog_manager.RegisterIndex(index_info))
       {
         return Info("Register Index failed.");
@@ -525,11 +533,13 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
   if (column_names.empty()){
     column_names = table.attribute_names_ordered();
   }
-  for (auto it : column_names){
-    if(!table.HasAttribute(it)){
-      std::string error_info;
-      error_info = "attribute \"" + it + "\" not exists.";
-      return Info(error_info);
+  else{
+    for (auto it : column_names){
+      if(!table.HasAttribute(it)){
+        std::string error_info;
+        error_info = "attribute \"" + it + "\" not exists.";
+        return Info(error_info);
+      }
     }
   }
 
@@ -544,7 +554,10 @@ Info API::SelectFrom(SqlCommandSelectFrom* command){
   std::vector<std::pair<int,int> > results;
   std::vector<std::vector<std::string> > records;
   if (select_all_records){
-    records = record_manager.SelectAllRecords(table);
+    auto records_offset_pairs = record_manager.SelectAllRecords(table);
+    for (auto i : records_offset_pairs){
+      records.push_back(i.first);
+    }
   }
   else{
     std::vector<WhereClause> where_clause_with_index;

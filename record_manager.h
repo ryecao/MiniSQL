@@ -54,7 +54,7 @@ public:
   //!!! 务必务必 !!!
   std::vector <std::vector<std::string>> SelectRecords(std::vector<std::pair<int,int>>& offsets, const TableInfo &table); 
 
-  std::vector <std::vector<std::string>> SelectAllRecords(const TableInfo& table);
+  std::vector <std::pair<std::vector<std::string>,int>> SelectAllRecords(const TableInfo& table);
 
   bool DeleteAllRecords(const TableInfo& table);
 private:

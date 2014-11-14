@@ -93,6 +93,8 @@ void RecordManager::loadBlockStatus(const std::string &filename) {
 }
 
 bool RecordManager::FitinTable(const std::vector<AttrType> &entry, const TableInfo &datatable){//  compare the attribute type with input and target table
+	float a = 123;
+	assert(AttrType(a)==AttrType(a));
 	if (entry.size() != datatable.attribute_number()){
 		std::cout<<"Error: entry.size() != datatable.attribute_number()"<<std::endl;//DEBUG
 		return false;
@@ -288,6 +290,7 @@ int RecordManager::InsertRecord(const TableInfo &datatable, const std::vector<st
 	}
 	Block block;
 	BufferManager T;
+	std::cout<<"offset: "<<offset<<std::endl;
 	if(offset==-1){
 		block=T.AllocateNewBlock(filename);
 		offset=block.offset;
@@ -452,8 +455,8 @@ std::vector <std::vector<std::string>> RecordManager::SelectRecords(std::vector<
 	return ret;
 }
 
-std::vector <std::vector<std::string>> RecordManager::SelectAllRecords(const TableInfo& datatable){
-	std::vector<std::vector<std::string>> ret;
+std::vector <std::pair<std::vector<std::string>,int> > RecordManager::SelectAllRecords(const TableInfo& datatable){
+	std::vector<std::pair<std::vector<std::string>,int> > ret;
 	std::string filename = datatable.table_name()+".db";
 	loadBlockStatus(filename);
 	int totalSize = getEntrySize(datatable);
@@ -475,7 +478,7 @@ std::vector <std::vector<std::string>> RecordManager::SelectAllRecords(const Tab
 					std::string target = attChangeToString(k);
 					each_ret.push_back(target);
 				}
-				ret.push_back(each_ret);
+				ret.push_back(std::make_pair(each_ret,offset));
 			}
 			c+=totalSize;
 		}

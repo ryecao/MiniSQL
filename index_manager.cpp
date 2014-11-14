@@ -60,7 +60,7 @@ bool IndexManager::AddRecord(const TableInfo &table, const IndexInfo &index, std
   }
   else if( type == 1){
     value_f = std::stof(value);
-    AttrType attr_type(value_i);
+    AttrType attr_type(value_f);
     bpt.insert(attr_type,offset);
   }
   else{
@@ -85,7 +85,7 @@ bool IndexManager::DeleteRecord(const TableInfo &table, const IndexInfo &index, 
   }
   else if( type == 1){
     value_f = std::stof(value);
-    AttrType attr_type(value_i);
+    AttrType attr_type(value_f);
     bpt.erase(attr_type);
   }
   else{
