@@ -111,6 +111,12 @@ Info API::CreateTable(SqlCommandCreateTable* command){
 
       table.add_attribute(single_attribute_info);
     }
+    
+    if(!table.HasAttribute(primary_key)){
+      std::string error_info;
+      error_info = "assigned primary key \"" + primary_key + "\" is not an attribute of the table.";
+      return Info(error_info);
+    }
 
     table.set_attribute_number(attribute_count);
 
@@ -433,10 +439,11 @@ Info API::InsertInto(SqlCommandInsertInto* command){
         error_info = "Value \"" + values.at(i)  + "\" is not a int number.";
         return Info(error_info);
       }
+
       try{
         int v = std::stoi(values.at(i));
       }
-      catch(std::out_of_range& e){
+      catch(const std::out_of_range& e){
         std::string error_info;
         error_info = "Value \"" + values.at(i)  + "\" is out of range of int.";
         return Info(error_info);
@@ -452,7 +459,7 @@ Info API::InsertInto(SqlCommandInsertInto* command){
       try{
         float v = std::stof(values.at(i));
       }
-      catch(std::out_of_range& e){
+      catch(const std::out_of_range& e){
         std::string error_info;
         error_info = "Value \"" + values.at(i)  + "\" is out of range of float.";
         return Info(error_info);

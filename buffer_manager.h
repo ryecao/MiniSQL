@@ -1,3 +1,15 @@
+// @copyright (c) 2014 sodabeta
+// @license: MIT
+// @author(s): sodabeta/rxzxx0723@gmail.com
+// created by sodabeta , Nov. , 2014
+//
+// MiniSQL
+// A course project for Database System Design, Fall 2014 @Zhejiang Univ.
+//
+// @file: buffer_manager.cpp
+// @brief: file buffer manager.
+//
+// please compile with -std=c++11
 #ifndef BUFFER_MANAGER_
 #define BUFFER_MANAGER_
 
@@ -11,22 +23,8 @@
 #include <fstream>
 #include <map>
 #include <set>
-// @copyright (c) 2014 sodabeta
-// @license: MIT
-// @author(s): sodabeta/rxzxx0723@gmail.com
-// created by sodabeta , Nov. , 2014
-//
-// MiniSQL
-// A course project for Database System Design, Fall 2014 @Zhejiang Univ.
-//
-// @file: buffer_manager.cpp
-// @brief: file buffer manager.
-//
-// please compile with -std=c++11
-
-#include <string>
-#include <fstream>
 #include "block.h"
+
 #define WRITE_MODE "a+"
 #define READ_MODE "r"
 using std::fstream;
@@ -71,6 +69,7 @@ public:
         fseek(F.fp,0,SEEK_SET);
         bool f=0;
         while(fscanf(F.fp,"%d",&o)==1)    f=1;
+        fclose(F.fp);
         return f;
     }
     bool BlockIsFree(const Block &b) {
