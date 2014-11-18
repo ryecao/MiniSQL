@@ -24,13 +24,14 @@
 #include "table_info.h"
 #include "index_info.h"
 #include <chrono>
+#include <cassert>
 
 void API::Switcher(SqlCommand* command){
   SqlCommandType command_type = command->command_type();
   Info info;
-  typedef std::chrono::high_resolution_clock Clock;
-  typedef std::chrono::milliseconds milliseconds;
-  Clock::time_point t0 = Clock::now();
+  // typedef std::chrono::high_resolution_clock Clock;
+  // typedef std::chrono::milliseconds milliseconds;
+  // Clock::time_point t0 = Clock::now();
   switch(command_type){
     case kSqlInvalid: { info = Info("Invalid Command, Please check your syntax."); break; }
     case kSqlCreateTable: { info = CreateTable(dynamic_cast<SqlCommandCreateTable *>(command)); break; }
@@ -42,9 +43,9 @@ void API::Switcher(SqlCommand* command){
     case kSqlSelectFrom: { info = SelectFrom(dynamic_cast<SqlCommandSelectFrom *>(command));break; }
   }
   info.PrintInfo();
-  Clock::time_point t1 = Clock::now();
-  milliseconds ms = std::chrono::duration_cast<milliseconds>(t1 - t0);
-  std::cout<<"time used:"<<ms.count()<<" ms."<<std::endl;
+  // Clock::time_point t1 = Clock::now();
+  // milliseconds ms = std::chrono::duration_cast<milliseconds>(t1 - t0);
+  // std::cout<<"time used:"<<ms.count()<<" ms."<<std::endl;
 }
 
 Info API::CreateTable(SqlCommandCreateTable* command){
@@ -253,6 +254,11 @@ Info API::DeleteFrom(SqlCommandDeleteFrom* command){
         std::string index_name = table.attribute(it.kColumnName).index_names().at(0);
         IndexInfo index = catalog_manager.GetIndexInfo(index_name);
         std::vector<int> offsets_of_a_clause = index_manager.FindRecords(table,index, it);
+        if(offsets_of_a_clause.empty()){
+          std::string error_info;
+          error_info = "record not found with index, deletion failed";
+          return Info(error_info);
+        }
         std::sort(offsets_of_a_clause.begin(), offsets_of_a_clause.end());
         offsets_of_a_clause.erase(std::unique(offsets_of_a_clause.begin(), offsets_of_a_clause.end()), offsets_of_a_clause.end());
 
@@ -267,10 +273,15 @@ Info API::DeleteFrom(SqlCommandDeleteFrom* command){
                                 results_of_a_clause.begin(),results_of_a_clause.end(),
                                 std::back_inserter(results_temp));
           results = results_temp;
+
         }
       }
-
       for(auto it : where_clause_without_index){
+        if(results.empty()){
+          std::string error_info;
+          error_info = "record not found with index, deletion failed";
+          return Info(error_info);
+        }
         results = record_manager.RecordsFilter(results, table, it);
       }
     }
@@ -283,6 +294,17 @@ Info API::DeleteFrom(SqlCommandDeleteFrom* command){
           results = record_manager.RecordsFilter(results,table, it);
         }
       }
+      if(results.empty()){
+        std::string error_info;
+        error_info = "record not found with no index, deletion failed";
+        return Info(error_info);
+      }
+
+    }
+    if(results.empty()){
+        std::string error_info;
+        error_info = "record not found, deletion failed";
+        return Info(error_info);
     }
     auto records = record_manager.SelectRecords(results, table);
     int ret = record_manager.DeleteRecords(results, table);
